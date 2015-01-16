@@ -581,3 +581,22 @@ if (isset($_SERVER['DEVDESKTOP_DRUPAL_SETTINGS_DIR']) && file_exists($_SERVER['D
 if (file_exists('/var/www/site-php')) {
   require('/var/www/site-php/eemcorben/eemcorben-settings.inc');
 }
+
+/**
+* Fast 404 settings:
+*/
+// This path may need to be changed if the fast 404 module is in a different location.
+include_once('./sites/all/modules/fast_404/fast_404.inc');
+
+# Disallowed extensions. Any extension in here will not be served by Drupal and
+# will get a fast 404.
+$conf['fast_404_exts'] = '/^(?!robots).*\.(txt|png|gif|jpe?g|css|js|ico|swf|flv|cgi|bat|pl|dll|exe|asp)$/i';
+
+# Array of whitelisted URL fragment strings that conflict with fast_404.
+$conf['fast_404_string_whitelisting'] = array('cdn/farfuture', '/advagg_');
+
+# Default fast 404 error message.
+$conf['fast_404_html'] = '<html xmlns="http://www.w3.org/1999/xhtml"><head><title>404 Not Found</title></head><body><h1>Not Found</h1><p>The requested URL "@path" was not found on this server.</p></body></html>';
+
+# Call the extension checking now. This will skip any logging of 404s.
+fast_404_ext_check();
