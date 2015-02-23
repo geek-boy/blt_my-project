@@ -17,7 +17,3 @@ core = "7.x"
 project = "sqlsrv"
 datestamp = "1412513228"
 
-
-; Information added by Acquia.com packaging script
-acquia = "1"
-
