@@ -8,7 +8,7 @@
 /**
  * The current system version.
  */
-define('VERSION', '7.34');
+define('VERSION', '7.35');
 
 /**
  * Core API compatibility.
@@ -923,31 +923,19 @@ function variable_initialize($conf = array()) {
     $variables = $cached->data;
   }
   else {
-    try {
-      // Cache miss. Avoid a stampede.
-      $name = 'variable_init';
-      if (!lock_acquire($name, 1)) {
-        // Another request is building the variable cache.
-        // Wait, then re-run this function.
-        lock_wait($name);
-        return variable_initialize($conf);
-      }
-      else {
-        // Proceed with variable rebuild.
-        $variables = array_map('unserialize', db_query('SELECT name, value FROM {variable}')->fetchAllKeyed());
-        cache_set('variables', $variables, 'cache_bootstrap');
-        lock_release($name);
-      }
+    // Cache miss. Avoid a stampede.
+    $name = 'variable_init';
+    if (!lock_acquire($name, 1)) {
+      // Another request is building the variable cache.
+      // Wait, then re-run this function.
+      lock_wait($name);
+      return variable_initialize($conf);
     }
-    catch (PDOException $e) {
-      // A PDO exception trying to acquire the lock might mean that we are
-      // running on an empty database. In that case, just redirect the user to
-      // install.php, unless we're already there.
-      if (!db_table_exists('variable') && !drupal_installation_attempted()) {
-        include_once DRUPAL_ROOT . '/includes/install.inc';
-        install_goto('install.php');
-      }
-      throw $e;
+    else {
+      // Proceed with variable rebuild.
+      $variables = array_map('unserialize', db_query('SELECT name, value FROM {variable}')->fetchAllKeyed());
+      cache_set('variables', $variables, 'cache_bootstrap');
+      lock_release($name);
     }
   }
 
@@ -2509,6 +2497,26 @@ function _drupal_bootstrap_variables() {
   // Load bootstrap modules.
   require_once DRUPAL_ROOT . '/includes/module.inc';
   module_load_all(TRUE);
+
+  // Sanitize the destination parameter (which is often used for redirects) to
+  // prevent open redirect attacks leading to other domains. Sanitize both
+  // $_GET['destination'] and $_REQUEST['destination'] to protect code that
+  // relies on either, but do not sanitize $_POST to avoid interfering with
+  // unrelated form submissions. The sanitization happens here because
+  // url_is_external() requires the variable system to be available.
+  if (isset($_GET['destination']) || isset($_REQUEST['destination'])) {
+    require_once DRUPAL_ROOT . '/includes/common.inc';
+    // If the destination is an external URL, remove it.
+    if (isset($_GET['destination']) && url_is_external($_GET['destination'])) {
+      unset($_GET['destination']);
+      unset($_REQUEST['destination']);
+    }
+    // If there's still something in $_REQUEST['destination'] that didn't come
+    // from $_GET, check it too.
+    if (isset($_REQUEST['destination']) && (!isset($_GET['destination']) || $_REQUEST['destination'] != $_GET['destination']) && url_is_external($_REQUEST['destination'])) {
+      unset($_REQUEST['destination']);
+    }
+  }
 }
 
 /**
