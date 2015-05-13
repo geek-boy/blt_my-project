@@ -573,3 +573,7 @@ if (isset($_SERVER['DEVDESKTOP_DRUPAL_SETTINGS_DIR']) && file_exists($_SERVER['D
   require $_SERVER['DEVDESKTOP_DRUPAL_SETTINGS_DIR'] . '/cld_prod_eemcorben_dev_eemcorben_site1.inc';
 }
 // </DDSETTINGS>
+
+if (file_exists('/var/www/site-php')) {
+    require('/var/www/site-php/eemcorben/eemcorben_site1-settings.inc');
+}
