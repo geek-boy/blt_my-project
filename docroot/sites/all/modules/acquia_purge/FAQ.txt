@@ -27,7 +27,7 @@ Frequently asked questions
   will DOUBLE the total amount of purging going on as http:// will also see its
   paths purged, so you will need to monitor your site extra careful as the queue
   can go up without getting purged fast enough. If the queue does go up quickly,
-  consider switching to cron mode (with 1-5 minute cron intervals) or disable
+  consider enabling cron processing (with 1-5 minute cron intervals) or disable
   http:// purging as well, see README.txt.
 
  My site redirects all http:// to https://, should Acquia Purge know about that?
@@ -44,41 +44,43 @@ Frequently asked questions
   domains it detected including your www and your bare domain, the more domains
   it has to purge the slower it will become. For SEO reasons it adds another
   problem, being that all of your content is now available on the web via TWO
-  domains which might degrade the ratings of your site. Its best to use a
+  domains which might degrade the ratings of your site. It's best to use a
   .htaccess redirect from bare-->www domain and to only purge your www domain
   name. See the DOMAINS.txt file on how to achieve this.
 
  Can I see the contents of the Acquia Purge queue?
 --------------------------------------------------------------------------------
   You can at all times visit the status report page to see what the status of
-  the queue is and how many items are in it, whenever its "idle" its safe to
+  the queue is and how many items are in it. Whenever it is "idle", it's safe to
   assume a empty queue. You can print the full queue using "drush ap-list"
 
- Does Acquia Purge purge from cron and/or should I set up cron for it?
+ Does Acquia Purge process its queue from cron? Should I?
 --------------------------------------------------------------------------------
-  Not by default as the client-side processing works well for most websites and
-  clogging site's cron runs even further isn't a good default setting. However,
-  it is possible as of Acquia Purge 7.x-1.0 to add this to your settings.php
-  file: "$conf['acquia_purge_cron'] = TRUE;", which will not only let the module
-  purge from cron, but also disable the on-screen client-side progressbar. It is
-  however very important - if you cron processing goes through Drush - that the
-  --uri parameter gets passed in to Drush, it should point to a URL your end
-  users will also visit, e.g. your frontpage.
+  Not by default, as the client-side AJAX processor takes care of this. When you
+  are noticing big queue loads - for instance due heavy content processing from
+  within cron runs - it is possible to enable cron mode. You can enable it by
+  adding "$conf['acquia_purge_cron'] = TRUE;" to settings.php. Once enabled, it
+  will contribute to speedy queue processing but doesn't replace other means
+  of processing. It is important - if you run cron through Drush - that the
+  --uri parameter gets passed in and that it points to the right URL.
 
  Can I disable the client-side progressbar based purging?
 --------------------------------------------------------------------------------
-  You can, but only by enabling cron-based purging as answered in the question
-  "Does Acquia Purge purge from cron and/or should I set up cron for it?".
+  No, this is not possible. It serves as last resort when nothing else processed
+  the queue and takes processing out of the main HTTP requests, which helps to
+  assure a fast Drupal backend experience. However, it can be visually hidden by
+  revoking the 'purge on-screen' permission, or for every user including the
+  administrator with: "$conf['acquia_purge_silentmode'] = TRUE;"
 
  With previous versions, I had set up "drush ap-process" in cron, is this okay?
 --------------------------------------------------------------------------------
-  Acquia Purge now has a cleaner way of enabling cron-based purging with the
-  setting "$conf['acquia_purge_cron'] = TRUE;", which is now the recommended
-  way of achieving this. The drawback that method is that there's no granular
-  control over when purging happens (as it follows the cron schedule) and that
-  it also disabled the client-side progressbar. So I recommend you to consider
-  using the new method but if any of its drawbacks prevent you from using the
-  new cron feature, you can continue using this directly.
+  It still works, though Acquia Purge now has a cleaner way by adding this to
+  your settings.php: setting "$conf['acquia_purge_cron'] = TRUE;". The only use
+  case not to use the built-in cron processing, is when you need more granular
+  control over when processing happens. Defining every-minute cron rules that
+  call "drush ap-process", is considered better than relying on the built-in
+  cron mode as that would mean that all other modules run too which might cause
+  cache clears and other types of unwanted harm.
 
  My logs are flooded by the Acquia Purge module, help!
 --------------------------------------------------------------------------------
@@ -103,8 +105,8 @@ Frequently asked questions
   Yes this is technically possible, but doing so is officially unsupported.
 
   Let me explain you why. The problem of cache invalidation is incredibly hard
-  and its a whole lot more than a simple HTTP PURGE/BAN request when nodes are
-  saved, in fact, its close to black magic. Supporting all kinds of hosting
+  and it is a whole lot more than a simple HTTP PURGE/BAN request when nodes are
+  saved, in fact, it is close to black magic. Supporting all kinds of hosting
   environments would call for a serious API that currently both Acquia Purge
   and the Purge module are not, and above all of that, purging paths works but
   isn't as elegant as it will get in Drupal 8. Therefore we decided to build a
@@ -120,23 +122,24 @@ Frequently asked questions
   I'm working on) will provide a proper API and its submodules will provide the
   necessary plugins to make it work on all environments.
 
-  Having that said, Acquia Purge *can be tricked* into thinking its on Acquia
+  Having that said, Acquia Purge *can be tricked* into thinking it is on Acquia
   Cloud and that will make its diagnostic message go silent. The HTTP requests
-  it makes should work on most Varnish configurations but if it doesn't, its up
-  to you to bring things in line and potentially patch the module if necessary.
+  it makes should work on most Varnish configurations but if it doesn't, it is
+  up to you to bring things in line and potentially patch the module if
+  necessary.
 
   // Trick Acquia Purge into thinking we are on Acquia Cloud.
   $_ENV['AH_SITE_NAME'] = $_ENV['AH_SITE_GROUP'] = 'fake';
-  $conf['acquia_hosting_site_info'] = array('fake');
+  $_ENV['AH_SITE_ENVIRONMENT'] = 'fake';
   $conf['reverse_proxies'] = array('127.0.0.1');
 
  Why does admin/uid 1 always see the progressbar since 7.x-1.0-beta2?
 --------------------------------------------------------------------------------
-  That is because we removed the 'Report cache purges'-setting that became
-  highly redundant since the 'Purge notification' permission was added. The fact
-  the progressbar now always shows for administrators is because we're now
-  solely depending on Drupal's permission system which allows everything for
-  administrators. Basically put, don't use admin to edit content.
+  By default, only the 'purge on-screen' permission is consulted. This depends
+  on Drupal's permission system which always grants administrators access. It is
+  not recommended to use UID 0 to edit content, but if you insist, the processor
+  can be visually hidden - not disabled - with putting this into settings.php:
+  $conf['acquia_purge_silentmode'] = TRUE;
 
  When I tested before it was slow and the queue exploded, should I reconsider?
 --------------------------------------------------------------------------------
@@ -151,7 +154,7 @@ Frequently asked questions
 
  My views and XYZ paths aren't getting purged, this is a bug!
 --------------------------------------------------------------------------------
-  The Acquia Purge module purges whatever its being told to purge, either via
+  The Acquia Purge module purges whatever it is being told to purge, either via
   expire, a rule action or via custom code you wrote. The expire module has
   the difficult task of detecting what pages need to be wiped based on changing
   entities (nodes, taxonomy, menu items..) and does a quite good job for simple
@@ -193,7 +196,7 @@ Frequently asked questions
  Will my sites performance improve once Acquia Purge and expire are set up?
 --------------------------------------------------------------------------------
   Yes, drastically even once you've increased your "Expiration of cached pages"
-  setting to a high value (rather days than hours). The higher its set, the
+  setting to a high value (rather days than hours). The higher it is set, the
   higher the time limit in the Cache-Control HTTP response header will be set.
   That will make your Acquia Cloud site's Varnish instances keep the pages in
   cache longer and frees up many PHP processing slots on your web servers.
@@ -224,41 +227,34 @@ Frequently asked questions
   caching on, a randomly changing URL will continuously wake up your web servers
   and could kill the performance of your site.
 
- Can I use Acquia Purge to programatically purge paths I want to be cleaned?
+ Can I use Acquia Purge to programmatically purge paths I want to be cleaned?
 --------------------------------------------------------------------------------
   Yes, the module has been purely designed to purge things on Acquia Cloud and
   to do it well! Its relation with the expire module is very thin for instance,
   it receives paths and wraps those to its own publicly facing API functions.
 
   You can queue items for purging like this:
-    acquia_purge_purge_path('node/5?parameter');
-    acquia_purge_purge_paths(array('news/section1', 'contact'));
-    $node = node_load(5);
-    expire_execute_expiration('node', $node, EXPIRE_NODE_UPDATE);
+    $service = _acquia_purge_service();
+    $service->addPath('node/5?parameter');
+    $service->addPaths(array('news/section1', 'contact'));
 
-  That will just queue them, you can process the queue with "drush ap-process",
-  cron or you can process a good chunk of items with:
-
-    if (_acquia_purge_queue_lock()) {
-      do {
-        $items = _acquia_purge_queue_pop('_acquia_purge_queue_processpurge');
-      } while (count($items));
+  If you run the code above as authenticated user during a web request (e.g.
+  not via Drush), it will trigger the AJAX processor for that users next page
+  load. However, if you want to process directly yourself, you can work a chunk
+  from the queue with this:
+    $service = _acquia_purge_service();
+    if ($service->lockAcquire()) {
+      $service->process();
+      $service->lockRelease();
     }
 
-  The while loop does not run until the queue is empty but runs as long as PHP
-  has resources for (and runs longer on the command line). The queue might be
-  empty already in many cases by the end of that loop, but its definitely no
-  guarantee and therefore having permanent processing of the queue (cron) is
-  preferable.
+  The AcquiaPurgeService::process() call will run as long as PHP has resources
+  for and depends on Acquia Purge's internal capacity calculation. When it runs
+  from the CLI, it has a higher max_execution_time and will therefore process
+  much more at once, then it will when triggered through a web server.
 
   You can always check upon the queue state by querying:
-  var_dump(_acquia_purge_queue_stats());
-
-  Its fine to do 10-50 paths in a do-while loop during a single request but
-  whenever the user has many domains or many load balancers, you will quickly
-  run into the necessity splitting things out using batch API. Just keep on
-  calling _acquia_purge_queue_pop('_acquia_purge_queue_processpurge') till it
-  returns a fully empty array.
+  var_dump(_acquia_purge_service()->stats());
 
  Should I disable Drupal's page cache because of my special module or feature?
 --------------------------------------------------------------------------------

@@ -47,8 +47,7 @@ function acquia_purge_drush_command() {
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_DATABASE,
       'aliases' => array('app'),
       'arguments' => array(
-        'paths' => 'The Drupal path to be purged, e.g.: "news" or "<front>",'
-          . ' multiple separated paths are also accepted: "news contact node/1".',
+        'paths' => 'The Drupal path to be purged, e.g.: "news" or "<front>", multiple separated paths are also accepted: "news contact node/1".',
       ),
       'examples' => array('drush app "news"'),
     ),
@@ -106,8 +105,9 @@ function drush_acquia_purge_ap_diagnosis($v = ACQUIA_PURGE_SEVLEVEL_INFO) {
   $longest = 25;
   foreach ($tests as $id => $test) {
     $tests[$id]['drush_type'] = $severitymap[$test['severity']];
-    if (strlen($test['name']) > $longest) {
-      $longest = strlen($test['name']) + 2;
+    $len = drupal_strlen($test['name']);
+    if ($len > $longest) {
+      $longest = $len + 2;
     }
   }
 
@@ -128,12 +128,11 @@ function drush_acquia_purge_ap_diagnosis($v = ACQUIA_PURGE_SEVLEVEL_INFO) {
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
  *   - description: The description of the requirement/status.
- *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
-
+ *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR.
  * @param int $longest
  *   The longest test name, used to calculate formatting padding.
  */
-function _drush_acquia_purge_ap_diagnosis_log($test, $longest) {
+function _drush_acquia_purge_ap_diagnosis_log(array $test, $longest) {
 
   // When running in backend mode, log messages aren't printed and forwarded.
   if (drush_get_context('DRUSH_BACKEND')) {
@@ -148,7 +147,8 @@ function _drush_acquia_purge_ap_diagnosis_log($test, $longest) {
     'info' => '%s',
     'error'  => '%s',
     'warning' => '%s',
-    'ok' => '%s');
+    'ok' => '%s',
+  );
 
   // In color mode, setup ASCII color codes borrowed from _drush_print_log().
   if (!drush_get_context('DRUSH_NOCOLOR')) {
@@ -162,9 +162,9 @@ function _drush_acquia_purge_ap_diagnosis_log($test, $longest) {
     sprintf($colors[$test['drush_type']], "%s%s%s%s%s\n"),
     $type,
     str_repeat(' ', $pad_maxlength - strlen($type)),
-    strtoupper($test['name']),
+    drupal_strtoupper($test['name']),
     str_repeat(' ', $longest - strlen($test['name'])),
-    strtolower($test['value_plain'])
+    drupal_strtolower($test['value_plain'])
   );
 
   // Print descriptions for warnings and errors.
@@ -216,19 +216,19 @@ function drush_acquia_purge_ap_purge($paths = NULL) {
   $paths = explode(' ', $paths);
   foreach ($paths as $path) {
     if ($msg = _acquia_purge_input_validate($path)) {
-      drush_set_error($path);
+      drush_print($path);
       return drush_set_error($msg);
     }
   }
 
   // Improve the administrative experience by automatically adding variations
   // on the given paths, which includes trailing slash versions and pagination.
-  if (_acquia_purge_get('acquia_purge_variations')) {
+  if (_acquia_purge_variable('acquia_purge_variations')) {
     _acquia_purge_input_path_variations($paths);
   }
 
   // Add all paths and dispatch processing to ap-process.
-  acquia_purge_purge_paths($paths);
+  _acquia_purge_service()->addPaths($paths);
   drush_acquia_purge_ap_process();
 }
 
@@ -243,10 +243,10 @@ function drush_acquia_purge_ap_forget() {
   }
 
   // Retrieve statistics, clear the queue and log to Drush.
-  $stats = _acquia_purge_queue_stats();
-  _acquia_purge_queue_clear();
+  $remaining = _acquia_purge_service()->stats('remaining');
+  _acquia_purge_service()->clear();
   drush_log(dt("Removed @remaining items from the queue.",
-    array('@remaining' => $stats['remaining'])), 'ok');
+    array('@remaining' => $remaining)), 'ok');
 }
 
 /**
@@ -286,9 +286,9 @@ function drush_acquia_purge_ap_process(&$context = NULL) {
   if (is_null($context)) {
 
     // Retrieve the statistics and determine if processing is needed.
-    $stats = _acquia_purge_queue_stats();
+    $stats = _acquia_purge_service()->stats();
     if (!$stats['running']) {
-      return drush_set_error("The purge queue is empty, done!");
+      return drush_print("The purge queue is empty, done!");
     }
 
     // Define the batch operation we're going to conduct.
@@ -297,55 +297,46 @@ function drush_acquia_purge_ap_process(&$context = NULL) {
       'title' => dt('Purging'),
       'operations' => array(),
       'init_message' => t('Initializing'),
-      'error_message' => t('An error occurred'));
-    for ($i=1; $i <= $steps; $i++) {
+      'error_message' => t('An error occurred'),
+    );
+    for ($i = 1; $i <= $steps; $i++) {
       $batch['operations'][] = array(__FUNCTION__, array());
     }
 
     // Store state data as it else won't be available to the sub processes.
-    _acquia_purge_state_commit();
+    _acquia_purge_service()->state()->commit();
 
     // Kick off the batch process, which will start forking processes.
     batch_set($batch);
     $batch =& batch_get();
     drush_backend_batch_process();
-
   }
 
-  //
   // SUB PROCESS.
-  //
   else {
 
-    // Stop invocation if serious error conditions have been found.
-    if (!_acquia_purge_queue_lock()) {
-      return drush_set_error("Unable to acquire lock, ensure that all users "
+    if (!_acquia_purge_service()->lockAcquire()) {
+      return drush_print("Unable to acquire lock, ensure that all users "
         . "close their browser tabs as a different purge seems to be active!");
     }
 
-    // Log and pop as much items out of the queue as we can + process.
-    printf("\n# %d items left...\n", _acquia_purge_queue_stats('remaining'));
-    $log = array();
-    do {
-      $items = _acquia_purge_queue_pop('_acquia_purge_queue_processpurge');
-
-      // Retrieve the statistics and log the purged urls.
-      $stats = _acquia_purge_queue_stats();
-      foreach ($stats['purgehistory'] as $logitem) {
-        if (!(in_array($logitem, $log))) {
-          drush_log(dt("Purged: @url", array('@url' => $logitem)), 'ok');
-          $log[] = $logitem;
+    // Process the maximum amount of paths we can process during runtime.
+    printf("\n# %d items left...\n", _acquia_purge_service()->stats('remaining'));
+    if (_acquia_purge_service()->process()) {
+      $printed_urls = array();
+      foreach (_acquia_purge_service()->history() as $url) {
+        if (!(in_array($url, $printed_urls))) {
+          drush_log(dt("Purged: @url", array('@url' => $url)), 'ok');
+          $printed_urls[] = $url;
         }
       }
-
-    } while (count($items));
+    }
 
     // Inform the Batch API when the process is finished.
-    if (!$stats['running']) {
+    if (!_acquia_purge_service()->stats('running')) {
       $context['finished'] = 1;
       $context['message'] = dt("Queue processed successfully!");
     }
-    _acquia_purge_queue_lock(NULL);
+    _acquia_purge_service()->lockRelease();
   }
 }
-

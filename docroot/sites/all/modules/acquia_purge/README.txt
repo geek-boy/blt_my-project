@@ -11,7 +11,7 @@ technical configuration.
 
 Features:
  * Built with editorial people and end-users in mind.
- * On-screen progressbar showing pages being cleared and made public.
+ * On-screen progress-bar showing pages being cleared and made public.
  * Turn-key installation for simple content sites.
  * Wipes pages based on detected changes by the expire module.
  * Integration with Rules allowing to wipe pages like 'news' and 'contact'.
@@ -55,13 +55,35 @@ exist as of this version and documented below:
 ║ acquia_purge_domains     ║ FALSE ║ Allows you to control which domains will  ║
 ║                          ║       ║ get purged, see DOMAINS.txt               ║
 ║                          ║       ║                                           ║
-║ acquia_purge_cron        ║ FALSE ║ Once set to TRUE, this will switch the    ║
-║                          ║       ║ queue processing entirely to cron and     ║
-║                          ║       ║ disable the client-side progressbar. Do   ║
-║                          ║       ║ keep an eye on 'drush ap-list' once       ║
-║                          ║       ║ enabled as the queue can grow too fast    ║
-║                          ║       ║ requiring a cron interval increase.       ║
+║ acquia_purge_sphpskippath║ TRUE  ║ By default, the sites.php domain detection║
+║                          ║       ║ skips records that do not end on a known  ║
+║                          ║       ║ TLD, as it assumes the remainder to be a  ║
+║                          ║       ║ path. Disabling this, enables experimental║
+║                          ║       ║ support for supporting all of sites.php.  ║
+║                          ║       ║ $conf['acquia_purge_sphpskippath'] = FALSE║
+║                          ║       ║                                           ║
+║ acquia_purge_stripports  ║ 80,443║ Ports stripped from records in sites.php  ║
+║                          ║       ║ that start with a first octet that is     ║
+║                          ║       ║ numeric, e.g.: '443.domain.com'. Ports    ║
+║                          ║       ║ outside this setting are not stripped     ║
+║                          ║       ║ from detected domains.                    ║
+║                          ║       ║ $conf['acquia_purge_stripports'] = [80];  ║
+║                          ║       ║                                           ║
+║ acquia_purge_cron        ║ FALSE ║ Once enabled, this will process queue     ║
+║                          ║       ║ items during cron. The client side AJAX   ║
+║                          ║       ║ processor cannot be disabled, but it will ║
+║                          ║       ║ run less, especially combined with late   ║
+║                          ║       ║ runtime processing enabled.               ║
 ║                          ║       ║ $conf['acquia_purge_cron'] = TRUE;        ║
+║                          ║       ║                                           ║
+║ acquia_purge_lateruntime ║ FALSE ║ When enabled, processing of the queue will║
+║                          ║       ║ start during the same request items got   ║
+║                          ║       ║ added to it. Queues clear quicker and the ║
+║                          ║       ║ role of the client-side AJAX processor    ║
+║                          ║       ║ reduces drastically. However, this does   ║
+║                          ║       ║ add RISK since pages can time/out or run  ║
+║                          ║       ║ out of memory! Test carefully!            ║
+║                          ║       ║ $conf['acquia_purge_lateruntime'] = TRUE; ║
 ║                          ║       ║                                           ║
 ║ acquia_purge_http        ║ TRUE  ║ Purging of http:// schemes, which is      ║
 ║                          ║       ║ the default behavior. You can disable     ║
@@ -69,7 +91,6 @@ exist as of this version and documented below:
 ║                          ║       ║ purge https://. Else the system will      ║
 ║                          ║       ║ shut itself down and report an error.     ║
 ║                          ║       ║ $conf['acquia_purge_http'] = FALSE;       ║
-║                          ║       ║                                           ║
 ║                          ║       ║                                           ║
 ║ acquia_purge_https       ║ FALSE ║ EXPERIMENTAL https:// scheme support,     ║
 ║                          ║       ║ disabled by default. Once enabled the     ║
@@ -79,14 +100,29 @@ exist as of this version and documented below:
 ║                          ║       ║ is fully https:// based (redirecting).    ║
 ║                          ║       ║ $conf['acquia_purge_https'] = TRUE;       ║
 ║                          ║       ║                                           ║
+║ acquia_purge_token       ║ FALSE ║ If set, this allows you to set a custom   ║
+║                          ║       ║ X-Acquia-Purge header value. This helps   ║
+║                          ║       ║ offset DDOS style attacks but requires    ║
+║                          ║       ║ balancer level configuration chances for  ║
+║                          ║       ║ you need to contact Acquia Support.       ║
+║                          ║       ║ $conf['acquia_purge_token'] = 'secret';   ║
+║                          ║       ║                                           ║
 ║ acquia_purge_base_path   ║(auto) ║ In some cases Drupal isn't served on the  ║
-║                          ║       ║ same URL as where its edited, which will  ║
+║                          ║       ║ same URL as where it's edited, which will ║
 ║                          ║       ║ cause different paths to be purged than   ║
 ║                          ║       ║ necessary. By overriding this setting,    ║
 ║                          ║       ║ Drupal's base_path() will no longer be    ║
 ║                          ║       ║ used to construct purges. Use only when   ║
 ║                          ║       ║ you know what you are doing.              ║
 ║                          ║       ║ $conf['acquia_purge_base_path'] = '/sub/';║
+║                          ║       ║                                           ║
+║ acquia_purge_errorlimit  ║ TRUE  ║ The system shuts down when it counted too ║
+║                          ║       ║ many HTTP errors. When TRUE, this limit is║
+║                          ║       ║ calculated with "slowdown factor^3", use  ║
+║                          ║       ║ 'drush apd' to see the actual factor. If  ║
+║                          ║       ║ you want a static limit instead, this has ║
+║                          ║       ║ to be set as integer value, e.g:          ║
+║                          ║       ║ $conf['acquia_purge_errorlimit'] = 500;   ║
 ║                          ║       ║                                           ║
 ║ acquia_purge_log_success ║ TRUE  ║ By default this module will log both      ║
 ║                          ║       ║ successes and failure, which is helpful   ║
@@ -119,5 +155,40 @@ exist as of this version and documented below:
 ║                          ║       ║ can consider disabling it followed by     ║
 ║                          ║       ║ 'drush ap-forget' to see if that works.   ║
 ║                          ║       ║ $conf['acquia_purge_memcache'] = FALSE;   ║
+║                          ║       ║                                           ║
+║ acquia_purge_passivemode ║ FALSE ║ When set to TRUE, this will cause the     ║
+║                          ║       ║ hook_expire_cache() implementation to stop║
+║                          ║       ║ working and effectively allows the module ║
+║                          ║       ║ to remain enabled in local environments   ║
+║                          ║       ║ without actually purging automatically.   ║
+║                          ║       ║ $conf['acquia_purge_passivemode'] = TRUE; ║
+║                          ║       ║                                           ║
+║ acquia_purge_silentmode  ║ FALSE ║ TRUE hides the client-side AJAX processor ║
+║                          ║       ║ regardless of what the "purge on-screen"  ║
+║                          ║       ║ permission is set to. It is not possible  ║
+║                          ║       ║ to disable the processor, but its role is ║
+║                          ║       ║ highly reduced in combination with cron   ║
+║                          ║       ║ mode and late runtime processing.         ║
+║                          ║       ║ $conf['acquia_purge_silentmode'] = TRUE;  ║
+║                          ║       ║                                           ║
+║ acquia_purge_allriskmode ║ FALSE ║ When set to TRUE, this disables full      ║
+║                          ║       ║ blocking checks for too high queue volumes║
+║                          ║       ║ and too many domain names. Using this mode║
+║                          ║       ║ excludes your support SLA entitlement and ║
+║                          ║       ║ rules out support on these checks from the║
+║                          ║       ║ Acquia Purge issue queue.                 ║
+║                          ║       ║ $conf['acquia_purge_allriskmode'] = TRUE; ║
+║                          ║       ║                                           ║
+║ acquia_purge_smartqueue  ║ FALSE ║ When set to TRUE, the smart queue backend ║
+║                          ║       ║ will be loaded instead. It automatically  ║
+║                          ║       ║ disregards items that Varnish has already ║
+║                          ║       ║ dropped and this backend can be a big     ║
+║                          ║       ║ efficiency improvement on sites with TTLs ║
+║                          ║       ║ not set to weeks or months. One BIG FAT   ║
+║                          ║       ║ WARNING: if your site dynamically sets the║
+║                          ║       ║ page_cache_maximum_age variable or max-age║
+║                          ║       ║ Cache-Control header value, using this    ║
+║                          ║       ║ backend will make purging VERY UNRELIABLE!║
+║                          ║       ║ $conf['acquia_purge_smartqueue'] = TRUE;  ║
 ║                          ║       ║                                           ║
 ╚══════════════════════════╩═══════╩═══════════════════════════════════════════╝

@@ -11,7 +11,7 @@
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -41,7 +41,7 @@ function _acquia_purge_get_diagnosis_acquiacloud($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -87,7 +87,7 @@ function _acquia_purge_get_diagnosis_balancers($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -137,7 +137,7 @@ function _acquia_purge_get_diagnosis_conflicts($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -145,6 +145,7 @@ function _acquia_purge_get_diagnosis_conflicts($t) {
  *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
  */
 function _acquia_purge_get_diagnosis_domains($t) {
+  $allriskmode = _acquia_purge_variable('acquia_purge_allriskmode');
   $domains_link = drupal_get_path('module', 'acquia_purge') . '/DOMAINS.txt';
   $domains_link = url($domains_link);
   $domains = _acquia_purge_get_domains();
@@ -159,12 +160,31 @@ function _acquia_purge_get_diagnosis_domains($t) {
       . ' 4 domains or when it is incorrect.', array('!link' => $domains_link)),
   );
 
-  // Start evaluating the list of domain names.
+  // Asterisks in domain names doesn't work given the way purging is configured
+  // on Acquia Cloud. To prevent people from silent failure, test for this.
+  $wildcard_domains_found = FALSE;
+  foreach ($domains as $domain) {
+    if (strpos($domain, '*') !== FALSE) {
+      $wildcard_domains_found = $domain;
+      break;
+    }
+  }
+
+  // Evaluate domain names configuration and kick off warnings or even a full
+  // block when the situation asks for it.
   if (!$domains_c) {
     $test['value'] = $t('0 domains detected.');
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
     $test['description'] = $t('No domains have been detected which implies that'
       . ' something is seriously wrong. Pending purges will not be processed.');
+  }
+  elseif ($wildcard_domains_found) {
+    $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
+    $test['description'] = $t('The domain "@baddomain" has a asterisk in it,'
+      . ' which implies that its subdomains require clearing. However, this is'
+      . ' unfortunately not supported by Acquia Cloud and therefore will lead'
+      . ' to purge failure. Please remove this domain from your configuration.',
+      array('@baddomain' => $wildcard_domains_found));
   }
   elseif ((php_sapi_name() === 'cli') && in_array('default', $domains)) {
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
@@ -184,6 +204,14 @@ function _acquia_purge_get_diagnosis_domains($t) {
       . ' target="_blank">specify your domains</a> to not exceed 6 domains.',
       array('!link' => $domains_link, '@no' => $domains_c));
   }
+  elseif ($allriskmode) {
+    $test['severity'] = ACQUIA_PURGE_SEVLEVEL_WARNING;
+    $test['description'] = $t('Because you have @no domain names there is a'
+      . ' <b>high risk</b> that purging your site will put stress on your'
+      . ' servers, it is <b>strongly recommended</b> to <a href="!link"'
+      . ' target="_blank">specify your domains</a> to not exceed 6 domains.',
+      array('!link' => $domains_link, '@no' => $domains_c));
+  }
   else {
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
     $test['description'] = $t('Because you have @no domain names there is a'
@@ -193,6 +221,7 @@ function _acquia_purge_get_diagnosis_domains($t) {
       . ' prevent system failure, pending purges will not be processed!',
       array('!link' => $domains_link, '@no' => $domains_c));
   }
+
   return $test;
 }
 
@@ -202,7 +231,7 @@ function _acquia_purge_get_diagnosis_domains($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -228,11 +257,12 @@ function _acquia_purge_get_diagnosis_expire($t) {
   $modes = array(
     EXPIRE_STATUS_DISABLED => t('disabled'),
     EXPIRE_STATUS_ENABLED_INTERNAL => t('internal'),
-    EXPIRE_STATUS_ENABLED_EXTERNAL => t('delegated'));
+    EXPIRE_STATUS_ENABLED_EXTERNAL => t('delegated'),
+  );
 
   // Test the configured mode and raise any issues.
   $test['value'] = isset($modes[$mode]) ? $modes[$mode] : 'n/a';
-  if ((int)$mode === EXPIRE_STATUS_ENABLED_EXTERNAL) {
+  if ((int) $mode === EXPIRE_STATUS_ENABLED_EXTERNAL) {
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_OK;
   }
   else {
@@ -246,7 +276,7 @@ function _acquia_purge_get_diagnosis_expire($t) {
       array(
         '@int' => $mode,
         '@mode' => $modes[$mode],
-        '!cmd' => $cmd
+        '!cmd' => $cmd,
       )
     );
     return $test;
@@ -279,7 +309,7 @@ function _acquia_purge_get_diagnosis_expire($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -290,8 +320,9 @@ function _acquia_purge_get_diagnosis_logging($t) {
   $test = array(
     'severity' => ACQUIA_PURGE_SEVLEVEL_OK,
     'value' => $t('successes and failures'),
-    'title' => $t('Logging verbosity'));
-  if (_acquia_purge_get('acquia_purge_log_success') !== TRUE) {
+    'title' => $t('Logging verbosity'),
+  );
+  if (_acquia_purge_variable('acquia_purge_log_success') !== TRUE) {
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_INFO;
     $test['value'] = $t('failures only');
   }
@@ -304,7 +335,7 @@ function _acquia_purge_get_diagnosis_logging($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -316,7 +347,8 @@ function _acquia_purge_get_diagnosis_page_cache($t) {
   $test = array(
     'severity' => ACQUIA_PURGE_SEVLEVEL_OK,
     'value' => $cache ? $t('Enabled') : $t('Disabled'),
-    'title' => $t('Anonymous page cache'));
+    'title' => $t('Anonymous page cache'),
+  );
 
   // See https://www.drupal.org/node/2330805
   if ((!$cache) && module_exists('authcache')) {
@@ -341,7 +373,7 @@ function _acquia_purge_get_diagnosis_page_cache($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -402,12 +434,12 @@ function _acquia_purge_get_diagnosis_page_cache_age($t) {
 }
 
 /**
- * Report which way processing occurs.
+ * Report how processing of the queue occurs.
  *
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -415,40 +447,35 @@ function _acquia_purge_get_diagnosis_page_cache_age($t) {
  *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
  */
 function _acquia_purge_get_diagnosis_processing_mode($t) {
-  $cron = _acquia_purge_get('acquia_purge_cron') === TRUE;
   $test = array(
-    'title' => $t('Processing mode'),
-    'value' => $t('client-side (js)'),
+    'title' => $t('Processing mode(s)'),
+    'value' => array($t('ajax')),
     'severity' => ACQUIA_PURGE_SEVLEVEL_OK,
   );
 
-  // Report just that if cron isn't running.
-  if (!$cron) {
-    return $test;
+  // Add tests for lateruntime and cron processing modes, when enabled.
+  if (_acquia_purge_variable('acquia_purge_lateruntime') === TRUE) {
+    $test['value'][] = $t('lateruntime');
+  }
+  if (_acquia_purge_variable('acquia_purge_cron') === TRUE) {
+    $test['value'][] = $t('cron');
+
+    // Raise a warning when it was too long ago since cron ran.
+    $cron_last = variable_get('cron_last');
+    if (!is_numeric($cron_last)) {
+      $cron_last = variable_get('install_time', 0);
+    }
+    if (REQUEST_TIME - $cron_last > 3600) {
+      $test['severity'] = ACQUIA_PURGE_SEVLEVEL_WARNING;
+      $test['description'] = $t('It has been longer than one hour since cron ran'
+        . ' for the last time, which puts your site at risk. As Acquia Purge'
+        . ' has cron processing enabled, it assumes processing of its queue.'
+        . ' When this is not frequent enough, the queue can reach dangerous'
+        . ' levels and eventually even lead to a safety shutdown.');
+    }
   }
 
-  // Since we are operating in cron mode, change the value.
-  $test['value'] = $t('cron');
-
-  // Test if the last cron run was too long ago for Acquia Purge.
-  $warning_threshold = 3600;
-
-  // Determine when cron last ran.
-  $cron_last = variable_get('cron_last');
-  if (!is_numeric($cron_last)) {
-    $cron_last = variable_get('install_time', 0);
-  }
-
-  // Raise a warning when it was too long ago since cron ran.
-  if (REQUEST_TIME - $cron_last > $warning_threshold) {
-    $test['severity'] = ACQUIA_PURGE_SEVLEVEL_WARNING;
-    $test['description'] = $t('It has been longer than one hour since cron ran'
-      . ' for the last time, which puts your site at risk. As Acquia Purge'
-      . ' operates in cron-mode, it assumes high frequency processing of its'
-      . ' queue. When this is not frequent enough, the queue can reach'
-      . ' dangerous levels and eventually even lead to a safety shutdown.');
-  }
-
+  $test['value'] = implode(', ', $test['value']);
   return $test;
 }
 
@@ -458,7 +485,7 @@ function _acquia_purge_get_diagnosis_processing_mode($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -483,7 +510,7 @@ function _acquia_purge_get_diagnosis_processing_capacity($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -495,7 +522,8 @@ function _acquia_purge_get_diagnosis_protocol_schemes($t) {
   $domains = _acquia_purge_get_domains();
   $test = array(
     'title' => $t('Purged schemes'),
-    'value' => implode(', ', $schemes));
+    'value' => implode(', ', $schemes),
+  );
 
   // Test if no protocol schemes are to be purged.
   if (in_array('ERROR', $schemes)) {
@@ -541,20 +569,46 @@ function _acquia_purge_get_diagnosis_protocol_schemes($t) {
 }
 
 /**
- * Test and report the current queue volume.
+ * Report which queue backend is in use.
  *
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
  *   - description: The description of the requirement/status.
  *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
  */
-function _acquia_purge_get_diagnosis_queue($t) {
-  $stats = _acquia_purge_queue_stats();
+function _acquia_purge_get_diagnosis_queue_backend($t) {
+  $test = array(
+    'title' => $t('Queue backend'),
+    'value' => t('Database'),
+    'severity' => ACQUIA_PURGE_SEVLEVEL_OK,
+  );
+  if (_acquia_purge_variable('acquia_purge_smartqueue')) {
+    $test['value'] = t('Smart queue (drops very old queue items)');
+  }
+  return $test;
+}
+
+/**
+ * Test and report the current queue volume.
+ *
+ * @param string $t
+ *   Name of the t() function to call.
+ *
+ * @return array
+ *   Associative array with the following elements:
+ *   - title: The name of the requirement.
+ *   - value: The current value (e.g., version, time, level, etc).
+ *   - description: The description of the requirement/status.
+ *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
+ */
+function _acquia_purge_get_diagnosis_queue_volume($t) {
+  $allriskmode = _acquia_purge_variable('acquia_purge_allriskmode');
+  $stats = _acquia_purge_service()->stats();
   $test = array('title' => $t('Queue volume'));
 
   // Define our warning and shutdown thresholds.
@@ -586,12 +640,23 @@ function _acquia_purge_get_diagnosis_queue($t) {
       . ' reducing the domains. As safety measure, Acquia Purge will shut'
       . ' itself down once the queue reaches @shutdown items!', $tvars);
   }
+  elseif ($allriskmode && ($stats['remaining'] >= $shutdown)) {
+    $test['value'] = $stats['remaining'];
+    $test['severity'] = ACQUIA_PURGE_SEVLEVEL_WARNING;
+    $test['description'] = $t('Your queue contains @total items and crossed'
+      . ' the safety limit of @shutdown items, Acquia Purge has not shut itself'
+      . ' down because you enabled "all risk mode". Because of this, you are'
+      . ' not entitled to Acquia support for any tickets related to queue'
+      . ' processing. You are being highly encouraged to lower your slowdown'
+      . ' factor by reducing domain names and/or increasing your cron interval'
+      . ' or enable cron processing when you have not yet done this.', $tvars);
+  }
   elseif ($stats['remaining'] >= $shutdown) {
     $test['value'] = $stats['remaining'];
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
     $test['description'] = $t('Your queue contains @total items and crossed'
       . ' the safety limit of @shutdown items, Acquia Purge has shut itself'
-      . ' down to prevent your system from trashing. What this means is that'
+      . ' down to prevent your system from thrashing. What this means is that'
       . ' you are either purging too broadly (domains, http:// and https://)'
       . ' or that your installation is not able to keep up. If you are not'
       . ' using cron for processing, set this up now and if you already are,'
@@ -609,7 +674,7 @@ function _acquia_purge_get_diagnosis_queue($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -635,7 +700,7 @@ function _acquia_purge_get_diagnosis_statedata($t) {
  * @param string $t
  *   Name of the t() function to call.
  *
- * @returns
+ * @return array
  *   Associative array with the following elements:
  *   - title: The name of the requirement.
  *   - value: The current value (e.g., version, time, level, etc).
@@ -643,22 +708,32 @@ function _acquia_purge_get_diagnosis_statedata($t) {
  *   - severity: ACQUIA_PURGE_SEVLEVEL_INFO, _OK, _WARNING, _ERROR
  */
 function _acquia_purge_get_diagnosis_status($t) {
-  $stats = _acquia_purge_queue_stats();
+  $passivemode = _acquia_purge_variable('acquia_purge_passivemode');
+  $errorlimit = _acquia_purge_variable('acquia_purge_errorlimit');
+  $stats = _acquia_purge_service()->stats();
   $test = array(
     'title' => $t('Status'),
-    'value' => $t('idle'),
+    'value' => $passivemode ? $t('idle (passive mode)') : t('idle'),
     'severity' => ACQUIA_PURGE_SEVLEVEL_INFO,
   );
 
-  // If the bad counter is too high, self-shutdown to prevent endless purging.
-  if ($stats['bad'] > 10) {
+  // When the user did not set a static integer as error limit, we calculate
+  // it dynamically with limit = factor^3, with 20 as lowest limit. The higher
+  // the factor is, the more tolerant our limit is. Limits for factors 1-14:
+  // 20, 20, 27, 64, 125, 216, 343, 512, 729, 1000, 1331, 1728, 2197, 2744
+  if (!is_int($errorlimit)) {
+    $factor = _acquia_purge_get_capacity_factor();
+    $errorlimit = ($factor <= 2) ? 20 : ceil(pow($factor, 3));
+  }
+  if ($stats['bad'] > $errorlimit) {
     $test['severity'] = ACQUIA_PURGE_SEVLEVEL_ERROR;
-    $test['description'] = $t('We counted @bad errors since the last time the'
-      . ' queue finished. To prevent the system from endlessly attempting to'
-      . ' process the queue, it is recommended to check your logs to see what'
-      . ' is going on. Once resolved, you should clear Varnish manually and'
-      . ' clear the queue by calling drush ap-forget, processing will then'
-      . ' start over from scratch.', array('@bad' => $stats['bad']));
+    $test['description'] = $t(
+        'Acquia Purge failed over @limit times (@bad), since the last time the'
+      . ' queue was processed. To avoid crashing your site with endless queue'
+      . ' processing, cache invalidation has been disabled. We recommend you to'
+      . " ask your site maintainer to check Drupal's watchdog logs for errors,"
+      . ' before lifting the blockade with "drush ap-forget".',
+      array('@limit' => $errorlimit, '@bad' => $stats['bad']));
     return $test;
   }
 

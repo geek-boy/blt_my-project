@@ -24,14 +24,14 @@
  * called both when $conf['acquia_purge_domains'] has been set and when it has
  * not been set, its up to you to be aware of the data you are operating on.
  *
- * @param $domains
+ * @param string[] $domains
  *   The entity info array, keyed by entity name.
  *
  * @see _acquia_purge_get_domains()
  * @see _acquia_purge_get_domains_add()
  * @see _acquia_purge_get_diagnosis_domains()
  */
-function hook_acquia_purge_domains_alter(&$domains) {
+function hook_acquia_purge_domains_alter(array &$domains) {
   $blacklist = array('domain_a', 'domain_b');
   foreach ($domains as $i => $domain) {
     if (in_array($domain, $blacklist)) {
@@ -40,6 +40,46 @@ function hook_acquia_purge_domains_alter(&$domains) {
   }
 
   _acquia_purge_get_domains_add('my_domain', $domains);
+}
+
+/**
+ * React after paths failed purging and have been released back to the queue.
+ *
+ * @param string[] $paths
+ *   Non-associative array of string values representing the failed paths.
+ *
+ * @warning
+ *   Called implementations run within the lock that Acquia Purge processors
+ *   claimed. It is important that your code is swift and does not break
+ *   execution flow (e.g. die() or exit()) since that would keep the lock
+ *   claimed until it expires.
+ *
+ * @see AcquiaPurgeService::process()
+ */
+function hook_acquia_purge_purge_failure(array $paths) {
+  foreach ($paths as $path) {
+    drupal_set_message(t('"@path"', array('@path' => $path)), 'error');
+  }
+}
+
+/**
+ * React after paths paths purged successfully and got deleted from the queue.
+ *
+ * @param string[] $paths
+ *   Non-associative array of string values representing the purged paths.
+ *
+ * @warning
+ *   Called implementations run within the lock that Acquia Purge processors
+ *   claimed. It is important that your code is swift and does not break
+ *   execution flow (e.g. die() or exit()) since that would keep the lock
+ *   claimed until it expires.
+ *
+ * @see AcquiaPurgeService::process()
+ */
+function hook_acquia_purge_purge_success(array $paths) {
+  foreach ($paths as $path) {
+    drupal_set_message(t('"@path"', array('@path' => $path)));
+  }
 }
 
 /**
@@ -54,17 +94,15 @@ function hook_acquia_purge_domains_alter(&$domains) {
  *
  * @param string $path
  *   The Drupal path (for example: '<front>', 'user/1' or a alias).
- * @param $variations
+ * @param string[] $variations
  *   All the variations that have been made up as possible other incarnations
  *   of the page that needs a manual wipe. You can delete items as well as
  *   adding new ones, as long as they are path sections (and NOT full urls!)
  *   on which Acquia Purge can perform Varnish purges thereafter.
  *
  * @see _acquia_purge_input_path_variations()
- * @return
- *   Void.
  */
-function hook_acquia_purge_variations_alter($path, &$variations) {
+function hook_acquia_purge_variations_alter($path, array &$variations) {
   if (in_array($path, array('<front>', '', '/'))) {
     $variations[] = 'rss.xml';
   }

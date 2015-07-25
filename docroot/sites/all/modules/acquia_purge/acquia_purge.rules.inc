@@ -20,9 +20,7 @@ function acquia_purge_rules_action_info() {
         'path' => array(
           'type' => 'text',
           'label' => t('Path'),
-          'description' => t('This rule gets removed in future versions as it'
-            . ' is obsolete, please use the new and better "Clear pages on'
-            . ' Acquia Cloud" rule action.'),
+          'description' => t('This rule gets removed in future versions as it is obsolete, please use the new and better "Clear pages on Acquia Cloud" rule action.'),
         ),
       ),
     ),
@@ -45,14 +43,7 @@ function acquia_purge_rules_action_info_alter(&$actions) {
   $actions[$action]['label'] = t('Clear pages on Acquia Cloud.');
   $actions[$action]['base'] = '_acquia_purge_action_flush_url';
   $actions[$action]['module'] = 'acquia_purge';
-  $actions[$action]['parameter']['urls']['description'] = t('A Drupal path or'
-      . ' full absolute URL that refers to a page on your website. Paths need'
-      . ' to be relative from the document root of your site, for instance'
-      . ' "node/1" or "news" but not "news/*" as wildcards are not supported.'
-      . ' When providing tokens that generate absolute URLs it is important to'
-      . ' understand that the domain names in URLs will be stripped out and'
-      . ' not respected as Acquia Purge will use its own list of domains,'
-      . ' which it uses to clear every path or URL it processes.');
+  $actions[$action]['parameter']['urls']['description'] = t('A Drupal path or full absolute URL that refers to a page on your website. Paths need to be relative from the document root of your site, for instance "node/1" or "news" but not "news/*" as wildcards are not supported. When providing tokens that generate absolute URLs it is important to understand that the domain names in URLs will be stripped out and not respected as Acquia Purge will use its own list of domains, which it uses to clear every path or URL it processes.');
 
   // Remove the original validation callback, which we will also take care of.
   unset($actions[$action]['callbacks']);
@@ -66,20 +57,17 @@ function acquia_purge_rules_action_info_alter(&$actions) {
  * behavior to the new 'Clear pages on Acquia Cloud.' rule action, but we are
  * actively warning people not to use it.
  *
- * @param array $path
- *   Non-associative array with absolute URL(s) or Drupal paths like
- *   '<front>', 'user' or 'news'.
+ * @param string $urls_and_paths
+ *   User input string with absolute URL(s) or Drupal paths.
  *
  * @deprecated
- * @returns
- *   NULL
  */
-function _acquia_purge_action_purge($path) {
+function _acquia_purge_action_purge($urls_and_paths) {
 
   // Rule actions can run very often, and if we would write out a log warning
   // about the deprecation of this rule action every time, we can congest the
   // site. Instead, only put a warning in when the queue's absolutely empty.
-  if (_acquia_purge_queue_stats('total') === 0) {
+  if (_acquia_purge_service()->stats('total') === 0) {
     watchdog(
       'acquia_purge',
       'Please switch to using the rule action "Clear pages on Acquia Cloud."'
@@ -91,18 +79,14 @@ function _acquia_purge_action_purge($path) {
 
   // Relay execution to the new rule action, old rules will certainly still
   // work, if not run better with the added URLs support.
-  _acquia_purge_action_flush_url($path);
+  _acquia_purge_action_flush_url($urls_and_paths);
 }
 
 /**
  * Purge URL(s) and Path(s), directly using Acquia Purge's APIs.
  *
- * @param array $urls_and_paths
- *   Non-associative array with absolute URL(s) or Drupal paths like
- *   '<front>', 'user' or 'news'.
- *
- * @returns
- *   NULL
+ * @param string $urls_and_paths
+ *   User input string with absolute URL(s) or Drupal paths.
  */
 function _acquia_purge_action_flush_url($urls_and_paths) {
   $paths = array();
@@ -122,7 +106,7 @@ function _acquia_purge_action_flush_url($urls_and_paths) {
     }
 
     // Validate the path after it was cleaned. Duplicates and empty paths will
-    // still be added as acquia_purge_purge_paths() deduplicates for us and
+    // still be added as AcquiaPurgeService::addPaths() deduplicates for us and
     // because empty paths usually represent frontpage wipes.
     $path = _acquia_purge_input_clean($path);
     if ($msg = _acquia_purge_input_validate($path)) {
@@ -148,5 +132,5 @@ function _acquia_purge_action_flush_url($urls_and_paths) {
     }
   }
 
-  acquia_purge_purge_paths($paths);
+  _acquia_purge_service()->addPaths($paths);
 }

@@ -6,67 +6,9 @@
  */
 
 /**
- * Menu callback; process a chunk of purge items via AJAX.
- *
- * @returns
- *   Statistics array encoded as JSON, including a 'widget' HTML snippet.
- */
-function acquia_purge_ajax_processor() {
-  $stats = _acquia_purge_queue_stats();
-  $stats['widget'] = '&nbsp;';
-  $stats['locked'] = FALSE;
-  $stats['error'] = FALSE;
-
-  // Ask our diagnostics system if there are any blocking issues that should
-  // stop us from processing the queue and notify the user about it.
-  if (!_acquia_purge_are_we_allowed_to_purge()) {
-    $err = current(_acquia_purge_get_diagnosis(ACQUIA_PURGE_SEVLEVEL_ERROR));
-    _acquia_purge_get_diagnosis_logged($err);
-    $stats['error'] = $err['description'];
-  }
-
-  // If nothing was found, attempt to acquire the lock and process some items.
-  else {
-    if (_acquia_purge_queue_lock()) {
-
-      // This automatically pops an X amount of items for which we have enough
-      // resource capacity and processes them straight away.
-      _acquia_purge_queue_pop('_acquia_purge_queue_processpurge');
-
-      // Processing finished, so update $stats to reflect the new values.
-      foreach (_acquia_purge_queue_stats() as $key => $value) {
-        $stats[$key] = $value;
-      }
-
-      // If errors did occur meanwhile, one indication of this could be that
-      // the history list remained empty, raise an error if it is empty.
-      if (empty($stats['purgehistory'])) {
-        $stats['error'] = t("The system seems to be having difficulties
-          refreshing recent content changes. Your work won't be lost, but please
-          do ask your technical administrator to check the logs.");
-      }
-
-      _acquia_purge_queue_lock(NULL);
-    }
-    else {
-      $stats['locked'] = TRUE;
-    }
-  }
-
-  // Render the status widget and add it to the statistics array.
-  if (!$stats['error']) {
-    $stats['widget'] = theme('acquia_purge_status_bar_widget', $stats);
-  }
-
-  return drupal_json_output($stats);
-}
-
-/**
  * Menu callback to fulfill autocompletes on manual purging forms.
  *
  * @see _acquia_purge_manualpurge_base()
- * @returns
- *   A standard Form API form-array.
  */
 function acquia_purge_autocomplete($string) {
   $query_limit = 10;
@@ -76,13 +18,13 @@ function acquia_purge_autocomplete($string) {
   $string = implode('/', array_slice(explode('/', $_GET['q']), 1));
 
   // Scan for node/ lookups as they're quite common.
-  if (substr($string, 0, 1) == 'n') {
+  if (drupal_substr($string, 0, 1) == 'n') {
     $query = db_select('node', 'n')
       ->fields('n', array('nid'))
       ->range(0, $query_limit);
 
     // Lookup node IDs if the user entered node/, else limit on 15.
-    if (strlen($string) > 5) {
+    if (drupal_strlen($string) > 5) {
       $string = (int) str_replace('node/', '', $string);
       $query->condition('n.nid', '%' . db_like($string) . '%', 'LIKE');
     }
@@ -152,13 +94,11 @@ function acquia_purge_manualpurge_form_full($form, &$form_state) {
     return array(
       'status' => array(
         '#type' => 'item',
-        '#title' => t("We're sorry, but due a critical error condition it is "
-          . "not possible to use this form. Please contact your administrator."),
+        '#title' => t("We're sorry, but due a critical error condition it is not possible to use this form. Please contact your administrator."),
         '#markup' => theme(
           'status_report',
           array(
-            'requirements'
-              => _acquia_purge_get_diagnosis(ACQUIA_PURGE_SEVLEVEL_ERROR)
+            'requirements' => _acquia_purge_get_diagnosis(ACQUIA_PURGE_SEVLEVEL_ERROR),
           )
         ),
       ),
@@ -183,9 +123,15 @@ function acquia_purge_manualpurge_form_full($form, &$form_state) {
   );
 
   // Define a list of example paths so users know what they can/should purge.
-  $examples = array('&lt;front&gt;', '&lt;front&gt;?page=0', '&lt;front&gt;/',
-    'node/1', 'node/1/', 'news?page=0');
-  if (_acquia_purge_get('acquia_purge_variations')) {
+  $examples = array(
+    '&lt;front&gt;',
+    '&lt;front&gt;?page=0',
+    '&lt;front&gt;/',
+    'node/1',
+    'node/1/',
+    'news?page=0',
+  );
+  if (_acquia_purge_variable('acquia_purge_variations')) {
     $examples = array('&lt;front&gt;', 'node/1', 'news');
   }
 
@@ -211,7 +157,7 @@ function acquia_purge_manualpurge_form_full($form, &$form_state) {
 
   // Decorate the textfields and prepend URL's as helpful guide.
   $schemes = _acquia_purge_get_protocol_schemes();
-  $base_path = _acquia_purge_get('acquia_purge_base_path');
+  $base_path = _acquia_purge_variable('acquia_purge_base_path');
   $prefix = sprintf('<b>%s://%s%s</b>', $schemes[0], $domains[0], $base_path);
   foreach ($form['paths']['path'] as $i => $item) {
     $form['paths']['path'][$i]['#field_prefix'] = $prefix;
@@ -258,11 +204,13 @@ function acquia_purge_manualpurge_form_page($form, &$form_state) {
 
   // Rewrite the paths array to just contain this page, variations might be
   // added later on if _acquia_purge_input_path_variations() gets called.
+  $request_uri = str_replace('##' . base_path(), '', '##' . request_uri());
   $form['paths'] = array();
   $form['paths']['path'][] = array(
     '#type' => 'hidden',
-    '#default_value' => $_GET['q'],
+    '#default_value' => $request_uri,
   );
+
   return $form;
 }
 
@@ -315,18 +263,19 @@ function _acquia_purge_manualpurge_base(&$form, &$form_state) {
     '#type' => 'submit',
     '#prefix' => '<p>',
     '#suffix' => '</p>',
-    '#value' => _acquia_purge_get('acquia_purge_cron')
-      ? t("Queue") : t("Purge"),
+    '#value' => _acquia_purge_variable('acquia_purge_cron') ? t("Queue") : t("Refresh"),
   );
   $form['submits']['page'] = array(
     '#type' => 'submit',
-    '#value' => t("Purge this page"),
+    '#value' => t("Refresh this page"),
   );
 
   return $form;
 }
 
 /**
+ * Manual base form: add.
+ *
  * @see _acquia_purge_manualpurge_base()
  */
 function __acquia_purge_manualpurge_add($form, &$form_state) {
@@ -335,6 +284,8 @@ function __acquia_purge_manualpurge_add($form, &$form_state) {
 }
 
 /**
+ * Manual base form: remove.
+ *
  * @see _acquia_purge_manualpurge_base()
  */
 function __acquia_purge_manualpurge_remove($form, &$form_state) {
@@ -345,6 +296,8 @@ function __acquia_purge_manualpurge_remove($form, &$form_state) {
 }
 
 /**
+ * Manual base form: paths.
+ *
  * @see _acquia_purge_manualpurge_base()
  */
 function __acquia_purge_manualpurge_paths($form, &$form_state) {
@@ -382,20 +335,19 @@ function __acquia_purge_manualpurge_submit($form, &$form_state) {
 
   // Improve the administrative experience by automatically adding variations
   // on the given paths, which includes trailing slash versions and pagination.
-  if (_acquia_purge_get('acquia_purge_variations')) {
+  if (_acquia_purge_variable('acquia_purge_variations')) {
     _acquia_purge_input_path_variations(
       $form_state['values']['paths']['path']);
   }
 
-  // Nothing visual will happen in cron-mode, unless we notify.
-  if (_acquia_purge_get('acquia_purge_cron') === TRUE) {
-    drupal_set_message(t('Your paths have been queued and will get processed '
-      . 'during the next cron iteration.'));
+  // Notify when there is no other visual feedback to be expected.
+  if (_acquia_purge_variable('acquia_purge_silentmode')) {
+    drupal_set_message(t('The requested content will be invalidated quickly.'));
   }
 
   // Only submit the paths if they really contain something.
   if (count($form_state['values']['paths']['path'])) {
-    acquia_purge_purge_paths($form_state['values']['paths']['path']);
+    _acquia_purge_service()->addPaths($form_state['values']['paths']['path']);
   }
 }
 
@@ -414,7 +366,7 @@ function __acquia_purge_manualpurge_submit($form, &$form_state) {
  *
  * @ingroup themeable
  */
-function theme_acquia_purge_status_bar_widget($variables) {
+function theme_acquia_purge_status_bar_widget(array $variables) {
 
   // Determine status messages based on what the statistics tells us.
   if ($variables['locked']) {
@@ -429,19 +381,23 @@ function theme_acquia_purge_status_bar_widget($variables) {
   }
 
   return theme('progress_bar', array(
-    'percent' => $variables['percent'], 'message' => $message));
+    'percent' => $variables['percent'],
+    'message' => $message,
+    )
+  );
 }
 
 /**
  * Returns HTML for the status report.
  *
- * @param $variables
+ * @param array $variables
  *   Requirements array as returned by _acquia_purge_get_diagnosis().
  *
  * @see theme_status_report()
+ *
  * @ingroup themeable
  */
-function theme_acquia_purge_status_report($variables) {
+function theme_acquia_purge_status_report(array $variables) {
   $output = '<table class="system-status-report">';
   $severities = array(
     ACQUIA_PURGE_SEVLEVEL_INFO => array(
@@ -462,17 +418,23 @@ function theme_acquia_purge_status_report($variables) {
     ),
   );
 
+  // Require all requirement constants from the installer code.
+  include_once DRUPAL_ROOT . '/includes/install.inc';
+
   foreach ($variables as $requirement) {
-    if (empty($requirement)) continue;
-    $severity = $severities[isset($requirement['severity']) ? (int) $requirement['severity'] : REQUIREMENT_OK];
+    if (empty($requirement) || !is_array($requirement)) {
+      continue;
+    }
+    $severity = isset($requirement['severity']) ? (int) $requirement['severity'] : REQUIREMENT_OK;
+    $severity = $severities[$severity];
 
     // Output table row(s)
     if (!empty($requirement['description'])) {
-      $output .= '<tr class="' . $severity['class'] . ' merge-down"><td class="status-title"><b>' . $requirement['name'] . '</b></td><td class="status-value">' . strtolower($requirement['value_plain']) . '</td></tr>';
+      $output .= '<tr class="' . $severity['class'] . ' merge-down"><td class="status-title"><b>' . $requirement['name'] . '</b></td><td class="status-value">' . drupal_strtolower($requirement['value_plain']) . '</td></tr>';
       $output .= '<tr class="' . $severity['class'] . ' merge-up"><td colspan="3" class="status-description">' . $requirement['description'] . '</td></tr>';
     }
     else {
-      $output .= '<tr class="' . $severity['class'] . '"><td class="status-title"><b>' . $requirement['name'] . '</b></td><td class="status-value">' . strtolower($requirement['value_plain']) . '</td></tr>';
+      $output .= '<tr class="' . $severity['class'] . '"><td class="status-title"><b>' . $requirement['name'] . '</b></td><td class="status-value">' . drupal_strtolower($requirement['value_plain']) . '</td></tr>';
     }
   }
 
@@ -495,7 +457,7 @@ function theme_acquia_purge_status_report($variables) {
  *
  * @ingroup themeable
  */
-function theme_acquia_purge_status_widget($variables) {
+function theme_acquia_purge_status_widget(array $variables) {
   if ($variables['running']) {
     return theme('acquia_purge_status_bar_widget', $variables);
   }
