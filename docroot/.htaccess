@@ -109,10 +109,6 @@ DirectoryIndex index.php index.html index.htm
   # uncomment the following line:
   # RewriteBase /
 
-  AuthType     Basic
-  AuthName     "Authentication Required"
-  AuthUserFile "files/.htpasswd"
-
   # Pass all requests not referring directly to files in the filesystem to
   # index.php. Clean URLs are handled in drupal_environment_initialize().
   RewriteCond %{REQUEST_FILENAME} !-f
@@ -146,4 +142,8 @@ DirectoryIndex index.php index.html index.htm
   </IfModule>
 </IfModule>
 
-# A little more testing
+# Add headers to all responses.
+<IfModule mod_headers.c>
+  # Disable content sniffing, since it's an attack vector.
+  Header always set X-Content-Type-Options nosniff
+</IfModule>

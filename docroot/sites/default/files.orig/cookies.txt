@@ -1,7 +1,0 @@
-.bunn.com	TRUE	/	FALSE	1462197600	__unam	5bc847b-14ef0e5513b-5ffb5045-2
-.bunn.com	TRUE	/	FALSE	1438561237	_dc_gtm_UA-52223033-1	1
-.bunn.com	TRUE	/	FALSE	1501632728	_ga	GA1.2.230063616.1438560638
-.bunn.com	TRUE	/	FALSE	1438561237	_gat_UA-52223033-1	1
-.bunn.com	TRUE	/	FALSE	1470096728	bunn_language	%7B%22code%22%3A%22en%22%2C%22name%22%3A%22English%22%2C%22default%22%3Atrue%2C%22active%22%3Afalse%7D
-.bunn.com	TRUE	/	FALSE	1470096726	bunn_region	%7B%22name%22%3A%22United%20States%22%2C%22displayName%22%3A%22United%20States%22%2C%22region%22%3A%22North%20America%22%7D
-www.bunn.com	FALSE	/	FALSE	has_js	1
