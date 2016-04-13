@@ -1,0 +1,7 @@
+ad_integration.admin_settings:
+  path: '/admin/config/system/ads'
+  defaults:
+    _form: '\Drupal\ad_integration\Form\SettingsForm'
+    _title: 'Advertising settings'
+  requirements:
+    _permission: 'administer site configuration'

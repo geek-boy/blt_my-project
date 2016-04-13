@@ -1,0 +1,26 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.media.gallery.field_media_images
+    - media_entity.bundle.gallery
+id: media.gallery.default
+targetEntityType: media
+bundle: gallery
+mode: default
+content:
+  field_images:
+    weight: 0
+    label: hidden
+    settings:
+      view_mode: gallery
+      link: false
+    third_party_settings: {  }
+    type: entity_reference_entity_view
+hidden:
+  created: true
+  field_media_images: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

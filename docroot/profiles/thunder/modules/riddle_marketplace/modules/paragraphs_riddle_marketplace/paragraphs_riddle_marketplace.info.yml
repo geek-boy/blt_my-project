@@ -1,0 +1,9 @@
+name: Paragraphs Type: Riddle
+description: Provide a 'Riddle' paragraphs type.
+package: Paragraphs Types
+type: module
+core: 8.x
+version: 1.1
+hidden: false
+dependencies:
+  - paragraphs

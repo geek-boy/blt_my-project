@@ -1,0 +1,157 @@
+<?php
+
+use Drupal\Core\Cache\Cache;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for node_form().
+ */
+function ad_integration_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  /* Is there a better way to get the node? */
+  $entity = $form_state->getBuildInfo()['callback_object']->getEntity();
+
+  /**
+   * Set group of all ad_integration_settings elements
+   */
+  $has_settings = FALSE;
+  foreach ($entity->getFieldDefinitions() as $fieldDefinition) {
+    if ($fieldDefinition->getType() === 'ad_integration_settings') {
+      $has_settings = TRUE;
+      $form[$fieldDefinition->getName()]['#group'] = 'ad_integration_settings_override';
+    }
+  }
+  if($has_settings) {
+    if(!isset($form['advanced'])) {
+      $form['advanced'] = array(
+        '#type' => 'vertical_tabs',
+        '#weight' => 99,
+      );
+    }
+
+    $form['ad_integration_settings_override'] = array(
+      '#type' => 'details',
+      '#title' => t('Advertising settings'),
+      '#open' => FALSE,
+      '#group' => 'advanced',
+      '#optional' => FALSE,
+    );
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() for taxonomy_term_form().
+ */
+function ad_integration_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state) {
+  ad_integration_form_node_form_alter($form, $form_state);
+}
+
+/**
+ * Implements template_preprocess_html().
+ */
+function ad_integration_page_attachments(array &$page) {
+  /**
+   * @var Drupal\ad_integration\AdIntegration $advertisingService
+   */
+  $advertisingService = \Drupal::service('ad_integration');
+  $ad_provider = $advertisingService->getAdProvider();
+  $page['#cache']['tags'] = Cache::mergeTags(isset($page['#cache']['tags']) ? $page['#cache']['tags'] : [], $advertisingService->getCacheTags());
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'src' => '/' . drupal_get_path('module', 'ad_integration') . '/js/adHelper.js'
+      ],
+    ],
+    'ad_helper'
+  ];
+
+  switch ($ad_provider) {
+    case 'fag':
+      _attach_fag($page, $advertisingService);
+      break;
+    case 'orbyd':
+      _attach_orbyd($page, $advertisingService);
+      break;
+  }
+}
+
+/**
+ * @param array $page
+ * @param $advertisingService
+ * @return array
+ */
+function _attach_orbyd(array &$page, $advertisingService) {
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'src' => $advertisingService->getAdEngine() ,
+        'type' => 'text/javascript'
+      ],
+    ],
+    'ad_orbyd_head'
+    ];
+
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'type' => 'text/javascript'
+      ],
+      '#value' => "var adunit1 = '" . $advertisingService->getAdUnit1() . "';
+                   var adunit2 = '" . $advertisingService->getAdUnit2() . "';
+                   var adunit3 = '" . $advertisingService->getAdUnit3() . "';
+                   var admode = '" . $advertisingService->getAdMode() . "';
+                   var adkeyword = '" . $advertisingService->getKeyword() . "';
+                   var admobile = deviceIsMobile().toString();
+                   var addevice = getDeviceType();",
+    ],
+    'advertising_config'
+  ];
+}
+
+/**
+ * @param array $page
+ * @param $advertisingService
+ * @return array
+ */
+function _attach_fag(array &$page, $advertisingService) {
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'type' => 'text/javascript'
+      ],
+      '#value' => "var adsc_adunit1 = '" . $advertisingService->getAdUnit1() . "';
+                   var adsc_adunit2 = '" . $advertisingService->getAdUnit2() . "';
+                   var adsc_adunit3 = '" . $advertisingService->getAdUnit3() . "';
+                   var adsc_mode = '" . $advertisingService->getAdMode() . "';
+                   var adsc_keyword = '" . $advertisingService->getKeyword() . "';
+                   var adsc_mobile = deviceIsMobile().toString();
+                   var adsc_device = getDeviceType();",
+    ],
+    'advertising_config'
+  ];
+
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'src' => $advertisingService->getAdContainerTag()
+      ],
+    ],
+    'container_tag'
+  ];
+  $page['#attached']['html_head'][] = [
+    [
+      '#tag' => 'script',
+      '#attributes' => [
+        'src' => $advertisingService->getAdEngine()
+      ],
+    ],
+    'ad_engine'
+  ];
+  $page['#attached']['library'][] = 'ad_integration/id_integration';
+  return $page;
+}

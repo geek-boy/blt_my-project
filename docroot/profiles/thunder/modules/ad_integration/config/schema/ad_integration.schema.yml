@@ -1,0 +1,52 @@
+ad_integration.settings:
+  type: mapping
+  label: 'Ad integration settings'
+  mapping:
+    ad_provider:
+      type: string
+      label: 'Ad provider'
+    adsc_container_tag:
+      type: string
+      label: 'Container tag url'
+    adsc_ad_engine:
+      type: string
+      label: 'Container ad engine'
+    adsc_keyword:
+      type: string
+      label: 'Ad Keyword'
+    adsc_keyword_overridable:
+      type: bool
+      label: 'Ad keyword is overridable'
+    adsc_unit1_default:
+      type: string
+      label: 'Ad unit 1'
+    adsc_unit2_default:
+      type: string
+      label: 'Ad unit 2'
+    adsc_unit2_overridable:
+      type: bool
+      label: 'Ad unit 2 is overridable'
+    adsc_unit3_default:
+      type: string
+      label: 'Ad unit 3'
+    adsc_unit3_overridable:
+      type: bool
+      label: 'Ad unit 3 is overridable'
+    adsc_mode_default:
+      type: string
+      label: 'Adsc mode'
+    adsc_mode_overridable:
+      type: bool
+      label: 'Adsc mode is overridable'
+    adsc_unit2_values:
+      type: sequence
+      label: 'Possible Ad unit 2 values'
+      sequence:
+        type: string
+        label: 'Value'
+    adsc_unit3_values:
+      type: sequence
+      label: 'Possible Ad unit 3 values'
+      sequence:
+        type: string
+        label: 'Value'

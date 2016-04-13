@@ -1,0 +1,6 @@
+{
+  "name": "drupal/riddle_marketplace",
+  "description": "Creation and embedding of riddles in drupal8 text editor and paragraphs",
+  "type": "drupal-module",
+  "license": "GPL-2.0+"
+}

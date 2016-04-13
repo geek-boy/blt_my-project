@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install, uninstall and update hooks for Media entity module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function media_entity_install() {
+  $source = drupal_get_path('module', 'media_entity') . '/images/icons';
+  $destination = \Drupal::config('media_entity.settings')->get('icon_base');
+  media_entity_copy_icons($source, $destination);
+}
+
+/**
+ * Remove "type" base field.
+ */
+function media_entity_update_8001() {
+  $fields = \Drupal::database()->query('DESCRIBE media_field_data')->fetchCol();
+  if (in_array('type', $fields)) {
+    \Drupal::database()->update('media_field_data')
+      ->fields(['type' => NULL])
+      ->execute();
+  }
+
+  $manager = \Drupal::entityDefinitionUpdateManager();
+  if ($field = $manager->getFieldStorageDefinition('type', 'media')) {
+    $manager->uninstallFieldStorageDefinition($field);
+  }
+}

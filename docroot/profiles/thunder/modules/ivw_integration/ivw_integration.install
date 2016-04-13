@@ -1,0 +1,23 @@
+<?php
+/**
+ * Implements hook_requirements().
+ */
+function ivw_integration_requirements($phase) {
+  $requirements = [];
+
+  if ($phase == 'runtime') {
+    $config = \Drupal::config('ivw_integration.settings');
+
+    // Raise warning if Google user account has not been set yet.
+    if (empty($config->get('site'))) {
+      $requirements['ivw_integration'] = [
+        'title' => t('IVW'),
+        'description' => t('IVW has not been configured yet. Please configure its settings from the <a href="@url">IVW settings page</a>.', ['@url' => \Drupal::url('ivw_integration.admin_settings')]),
+        'severity' => REQUIREMENT_WARNING,
+        'value' => t('Not configured'),
+      ];
+    }
+  }
+
+  return $requirements;
+}

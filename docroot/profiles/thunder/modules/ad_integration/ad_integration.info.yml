@@ -1,0 +1,8 @@
+name: Ad integration
+type: module
+description: 'Ad integration'
+package: Advertising
+core: 8.x
+
+dependencies:
+  - token

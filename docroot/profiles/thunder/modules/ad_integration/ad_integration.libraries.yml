@@ -1,0 +1,4 @@
+id_integration:
+  js:
+    'js/adIntegration.js': {}
+

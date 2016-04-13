@@ -1,0 +1,15 @@
+name: Scheduler
+type: module
+description: 'Publish and unpublish content on specified dates and time.'
+core: 8.x
+dependencies:
+  - action
+  - datetime
+  - field
+  - node
+  - views
+test_dependencies:
+  - date
+libraries:
+  - scheduler/admin
+  - vertical-tabs

@@ -1,0 +1,73 @@
+ivw_integration.settings:
+  type: mapping
+  label: 'IVW Settings'
+  mapping:
+    site:
+      type: string
+      label: 'IVW site name as used in st parameter'
+    site:
+      type: string
+      label: 'IVW mobile site name as used in st parameter'
+    code_template:
+      type: string
+      label: 'IVW code template'
+    responsive:
+      type: integer
+      label: 'Site is responsive'
+    mobile_width:
+      type: integer
+      label: 'Mobile detection pixel width'
+    offering_default:
+      type: string
+      label: 'Default code for offering'
+    offering_overridable:
+      type: bool
+      label: 'Offering setting is overridable'
+    language_default:
+       type: integer
+       label: 'Default language code'
+    language_overridable:
+      type: bool
+      label: 'Language setting is overridable'
+    format_default:
+       type: integer
+       label: 'Default format code'
+    format_overridable:
+      type: bool
+      label: 'Format setting is overridable'
+    creator_default:
+       type: integer
+       label: 'Default creator code'
+    creator_overridable:
+      type: bool
+      label: 'Creator setting is overridable'
+    homepage_default:
+       type: integer
+       label: 'Default homepage code'
+    homepage_overridable:
+      type: bool
+      label: 'Homepage setting is overridable'
+    delivery_default:
+       type: integer
+       label: 'Default delivery code'
+    delivery_overridable:
+      type: bool
+      label: 'Delivery setting is overridable'
+    app_default:
+       type: integer
+       label: 'Default app flag'
+    app_overridable:
+      type: bool
+      label: 'App setting is overridable'
+    paid_default:
+      type: integer
+      label: 'Default paid flag'
+    paid_overridable:
+      type: bool
+      label: 'Paid setting is overridable'
+    content_default:
+       type: string
+       label: 'Default content code'
+    content_overridable:
+      type: bool
+      label: 'Content setting is overridable'

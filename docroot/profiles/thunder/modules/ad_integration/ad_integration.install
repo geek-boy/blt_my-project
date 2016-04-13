@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * update field schema
+ */
+function ad_integration_update_8001() {
+  $database = \Drupal::database();
+  $database_schema = $database->schema();
+  $entity_types = \Drupal::entityManager()->getDefinitions();
+
+  $schema = \Drupal::keyValue('entity.storage_schema.sql')->getAll();
+  $schema_copy = $schema;
+  foreach ($schema as $item_name => $item) {
+    list($entity_type_id, , ) = explode('.', $item_name);
+    if (!isset($entity_types[$entity_type_id])) {
+      continue;
+    }
+    foreach ($item as $table_name => $table_schema) {
+      foreach ($table_schema as $schema_key => $schema_data) {
+        if ($schema_key === 'fields') {
+          if(isset($schema_data['field_advertising_adsc_mode'])) {
+            $field_name = 'field_advertising_adsc_keyword';
+            $field_definition = array(
+              'type' => 'varchar',
+              'length' => 256,
+              'not null' => TRUE,
+            );
+            $schema_copy[$item_name][$table_name]['fields'][$field_name] = $field_definition;
+            if ($database->driver() == 'mysql') {
+              //$database_schema->addField();
+              try {
+                $database_schema->addField($table_name, $field_name, $field_definition);
+              } catch (\Exception $e) {
+
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  \Drupal::keyValue('entity.storage_schema.sql')->setMultiple($schema_copy);
+}
