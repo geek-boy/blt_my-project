@@ -5,4 +5,4 @@ events:
       - hello:
           type: script
           script:
-            - echo "Hello, Pipelines!" > docroot/hello.txt
+            - echo "Hello, Clem Fandango!" > docroot/hello.txt
