@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\user\Plugin\views\filter\Roles.
- */
-
 namespace Drupal\user\Plugin\views\filter;
 
 use Drupal\user\RoleInterface;
@@ -67,7 +62,7 @@ class Roles extends ManyToOne {
   /**
    * Override empty and not empty operator labels to be clearer for user roles.
    */
-  function operators() {
+  public function operators() {
     $operators = parent::operators();
     $operators['empty']['title'] = $this->t("Only has the 'authenticated user' role");
     $operators['not empty']['title'] = $this->t("Has roles in addition to 'authenticated user'");
@@ -78,7 +73,7 @@ class Roles extends ManyToOne {
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    $dependencies = array();
+    $dependencies = [];
     foreach ($this->value as $role_id) {
       $role = $this->roleStorage->load($role_id);
       $dependencies[$role->getConfigDependencyKey()][] = $role->getConfigDependencyName();

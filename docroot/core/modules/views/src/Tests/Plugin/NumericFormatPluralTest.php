@@ -1,13 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\Plugin\NumericFormatPluralTest.
- */
-
 namespace Drupal\views\Tests\Plugin;
 
 use Drupal\Component\Gettext\PoHeader;
+use Drupal\file\Entity\File;
 use Drupal\views\Tests\ViewTestBase;
 
 /**
@@ -22,14 +18,14 @@ class NumericFormatPluralTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $modules = array('views_ui', 'file', 'language', 'locale');
+  public static $modules = ['views_ui', 'file', 'language', 'locale'];
 
   /**
    * Views used by this test.
    *
    * @var array
    */
-  public static $testViews = array('numeric_test');
+  public static $testViews = ['numeric_test'];
 
   protected function setUp() {
     parent::setUp();
@@ -41,7 +37,7 @@ class NumericFormatPluralTest extends ViewTestBase {
   /**
    * Test plural formatting setting on a numeric views handler.
    */
-  function testNumericFormatPlural() {
+  public function testNumericFormatPlural() {
     // Create a file.
     $file = $this->createFile();
 
@@ -63,7 +59,7 @@ class NumericFormatPluralTest extends ViewTestBase {
     // Assert that changing the settings will change configuration properly.
     $edit = ['options[format_plural_values][0]' => '1 time', 'options[format_plural_values][1]' => '@count times'];
     $this->drupalPostForm(NULL, $edit, t('Apply'));
-    $this->drupalPostForm(NULL, array(), t('Save'));
+    $this->drupalPostForm(NULL, [], t('Save'));
 
     $config = $this->config('views.view.numeric_test');
     $field_config_prefix = 'display.default.display_options.fields.count.';
@@ -107,7 +103,7 @@ class NumericFormatPluralTest extends ViewTestBase {
       'options[format_plural_values][3]' => '@count time3',
     ];
     $this->drupalPostForm(NULL, $edit, t('Apply'));
-    $this->drupalPostForm(NULL, array(), t('Save'));
+    $this->drupalPostForm(NULL, [], t('Save'));
     $config = $this->config('views.view.numeric_test');
     $field_config_prefix = 'display.default.display_options.fields.count.';
     $this->assertEqual($config->get($field_config_prefix . 'format_plural'), TRUE);
@@ -140,11 +136,11 @@ class NumericFormatPluralTest extends ViewTestBase {
    * Creates and saves a test file.
    *
    * @return \Drupal\Core\Entity\EntityInterface
-   *  A file entity.
+   *   A file entity.
    */
   protected function createFile() {
     // Create a new file entity.
-    $file = entity_create('file', array(
+    $file = File::create([
       'uid' => 1,
       'filename' => 'druplicon.txt',
       'uri' => 'public://druplicon.txt',
@@ -152,7 +148,7 @@ class NumericFormatPluralTest extends ViewTestBase {
       'created' => 1,
       'changed' => 1,
       'status' => FILE_STATUS_PERMANENT,
-    ));
+    ]);
     file_put_contents($file->getFileUri(), 'hello world');
 
     // Save it, inserting a new record.
@@ -160,4 +156,5 @@ class NumericFormatPluralTest extends ViewTestBase {
 
     return $file;
   }
+
 }

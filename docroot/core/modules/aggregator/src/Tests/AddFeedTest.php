@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\aggregator\Tests\AddFeedTest.
- */
-
 namespace Drupal\aggregator\Tests;
 
 /**
@@ -28,7 +23,7 @@ class AddFeedTest extends AggregatorTestBase {
     $feed->refreshItems();
 
     // Check feed data.
-    $this->assertUrl(\Drupal::url('aggregator.feed_add', [], ['absolute' => TRUE]), [], 'Directed to correct url.');
+    $this->assertUrl(\Drupal::url('aggregator.feed_add', [], ['absolute' => TRUE]), [], 'Directed to correct URL.');
     $this->assertTrue($this->uniqueFeed($feed->label(), $feed->getUrl()), 'The feed is unique.');
 
     // Check feed source.
@@ -44,8 +39,8 @@ class AddFeedTest extends AggregatorTestBase {
       'refresh' => '900',
     ];
     $this->drupalPostForm('aggregator/sources/add', $edit, t('Save'));
-    $this->assertRaw(t('A feed named %feed already exists. Enter a unique title.', array('%feed' => $feed->label())));
-    $this->assertRaw(t('A feed with this URL %url already exists. Enter a unique URL.', array('%url' => $feed->getUrl())));
+    $this->assertRaw(t('A feed named %feed already exists. Enter a unique title.', ['%feed' => $feed->label()]));
+    $this->assertRaw(t('A feed with this URL %url already exists. Enter a unique URL.', ['%url' => $feed->getUrl()]));
 
     // Delete feed.
     $this->deleteFeed($feed);
@@ -96,4 +91,5 @@ class AddFeedTest extends AggregatorTestBase {
     $this->deleteFeed($feed);
     $this->deleteFeed($feed_2);
   }
+
 }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Ajax\ReplaceCommand.
- */
-
 namespace Drupal\Core\Ajax;
 
 /**
@@ -29,13 +24,13 @@ class ReplaceCommand extends InsertCommand {
    */
   public function render() {
 
-    return array(
+    return [
       'command' => 'insert',
       'method' => 'replaceWith',
       'selector' => $this->selector,
       'data' => $this->getRenderedContent(),
       'settings' => $this->settings,
-    );
+    ];
   }
 
 }

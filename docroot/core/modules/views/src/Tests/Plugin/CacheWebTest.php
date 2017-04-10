@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\Plugin\CacheWebTest.
- */
-
 namespace Drupal\views\Tests\Plugin;
 
 use Drupal\system\Tests\Cache\AssertPageCacheContextsAndTagsTrait;
@@ -26,14 +21,14 @@ class CacheWebTest extends PluginTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_display');
+  public static $testViews = ['test_display'];
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = array('taxonomy');
+  public static $modules = ['taxonomy'];
 
   /**
    * {@inheritdoc}
@@ -51,13 +46,13 @@ class CacheWebTest extends PluginTestBase {
     $view = Views::getView('test_display');
     $view->storage->setStatus(TRUE);
     $view->setDisplay('page_1');
-    $view->display_handler->overrideOption('cache', array(
+    $view->display_handler->overrideOption('cache', [
       'type' => 'time',
-      'options' => array(
+      'options' => [
         'results_lifespan' => '3600',
         'output_lifespan' => '3600'
-      )
-    ));
+      ]
+    ]);
     $view->save();
     $this->container->get('router.builder')->rebuildIfNeeded();
 

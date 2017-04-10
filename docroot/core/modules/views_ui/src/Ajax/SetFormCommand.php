@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_ui\Ajax\SetFormCommand.
- */
-
 namespace Drupal\views_ui\Ajax;
 
 use Drupal\Core\Ajax\CommandInterface;
@@ -37,10 +32,10 @@ class SetFormCommand implements CommandInterface {
    * {@inheritdoc}
    */
   public function render() {
-    return array(
+    return [
       'command' => 'viewsSetForm',
       'url' => $this->url,
-    );
+    ];
   }
 
 }

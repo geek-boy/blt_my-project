@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\migrate\Row.
- */
-
 namespace Drupal\migrate;
 
 use Drupal\Component\Utility\NestedArray;
@@ -20,21 +15,21 @@ class Row {
    *
    * @var array
    */
-  protected $source = array();
+  protected $source = [];
 
   /**
    * The source identifiers.
    *
    * @var array
    */
-  protected $sourceIds = array();
+  protected $sourceIds = [];
 
   /**
    * The destination values.
    *
    * @var array
    */
-  protected $destination = array();
+  protected $destination = [];
 
   /**
    * Level separator of destination and source properties.
@@ -46,11 +41,11 @@ class Row {
    *
    * @var array
    */
-  protected $idMap = array(
+  protected $idMap = [
     'original_hash' => '',
     'hash' => '',
     'source_row_status' => MigrateIdMapInterface::STATUS_NEEDS_UPDATE,
-  );
+  ];
 
   /**
    * Whether the source has been frozen already.
@@ -96,7 +91,7 @@ class Row {
    * @throws \InvalidArgumentException
    *   Thrown when a source ID property does not exist.
    */
-  public function __construct(array $values, array $source_ids, $is_stub = FALSE) {
+  public function __construct(array $values = [], array $source_ids = [], $is_stub = FALSE) {
     $this->source = $values;
     $this->sourceIds = $source_ids;
     $this->isStub = $is_stub;
@@ -340,4 +335,5 @@ class Row {
   public function isStub() {
     return $this->isStub;
   }
+
 }

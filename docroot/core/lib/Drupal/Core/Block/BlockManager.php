@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Block\BlockManager.
- */
-
 namespace Drupal\Core\Block;
 
 use Drupal\Component\Plugin\FallbackPluginManagerInterface;
@@ -79,7 +74,7 @@ class BlockManager extends DefaultPluginManager implements BlockManagerInterface
   /**
    * {@inheritdoc}
    */
-  public function getFallbackPluginId($plugin_id, array $configuration = array()) {
+  public function getFallbackPluginId($plugin_id, array $configuration = []) {
     return 'broken';
   }
 

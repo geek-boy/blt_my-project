@@ -1,19 +1,20 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\text\Plugin\migrate\cckfield\TextField.
- */
-
 namespace Drupal\text\Plugin\migrate\cckfield;
 
-use Drupal\migrate\Entity\MigrationInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Row;
 use Drupal\migrate_drupal\Plugin\migrate\cckfield\CckFieldPluginBase;
 
 /**
  * @MigrateCckField(
- *   id = "text"
+ *   id = "text",
+ *   type_map = {
+ *     "text" = "text",
+ *     "text_long" = "text_long",
+ *     "text_with_summary" = "text_with_summary"
+ *   },
+ *   core = {6,7}
  * )
  */
 class TextField extends CckFieldPluginBase {
@@ -86,11 +87,11 @@ class TextField extends CckFieldPluginBase {
       ];
     }
 
-    $process = array(
+    $process = [
       'plugin' => 'iterator',
       'source' => $field_name,
       'process' => $process,
-    );
+    ];
     $migration->setProcessOfProperty($field_name, $process);
   }
 
@@ -118,7 +119,7 @@ class TextField extends CckFieldPluginBase {
         case 'text_textarea':
           return 'text_long';
         default:
-          break;
+          return parent::getFieldType($row);
       }
     }
   }

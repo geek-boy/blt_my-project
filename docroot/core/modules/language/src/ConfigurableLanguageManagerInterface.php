@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\language\ConfigurableLanguageManagerInterface.
- */
-
 namespace Drupal\language;
 
 use Drupal\Core\Language\LanguageInterface;
@@ -82,7 +77,7 @@ interface ConfigurableLanguageManagerInterface extends LanguageManagerInterface 
    * @param string $langcode
    *   The language code for the override.
    *
-   * @return \Drupal\Core\Config\StorageInterface $storage
+   * @return \Drupal\Core\Config\StorageInterface
    *   A storage object to use for reading and writing the
    *   configuration override.
    */

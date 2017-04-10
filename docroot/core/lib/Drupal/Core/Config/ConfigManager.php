@@ -1,19 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Config\ConfigManager.
- */
-
 namespace Drupal\Core\Config;
 
 use Drupal\Component\Diff\Diff;
-use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Config\Entity\ConfigDependencyManager;
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -153,17 +148,17 @@ class ConfigManager implements ConfigManagerInterface {
     $target_data = explode("\n", Yaml::encode($target_storage->read($target_name)));
 
     // Check for new or removed files.
-    if ($source_data === array('false')) {
+    if ($source_data === ['false']) {
       // Added file.
       // Cast the result of t() to a string, as the diff engine doesn't know
       // about objects.
-      $source_data = array((string) $this->t('File added'));
+      $source_data = [(string) $this->t('File added')];
     }
-    if ($target_data === array('false')) {
+    if ($target_data === ['false']) {
       // Deleted file.
       // Cast the result of t() to a string, as the diff engine doesn't know
       // about objects.
-      $target_data = array((string) $this->t('File removed'));
+      $target_data = [(string) $this->t('File removed')];
     }
 
     return new Diff($source_data, $target_data);
@@ -256,7 +251,7 @@ class ConfigManager implements ConfigManagerInterface {
     if (!$dependency_manager) {
       $dependency_manager = $this->getConfigDependencyManager();
     }
-    $dependencies = array();
+    $dependencies = [];
     foreach ($names as $name) {
       $dependencies = array_merge($dependencies, $dependency_manager->getDependentEntities($type, $name));
     }
@@ -268,7 +263,7 @@ class ConfigManager implements ConfigManagerInterface {
    */
   public function findConfigEntityDependentsAsEntities($type, array $names, ConfigDependencyManager $dependency_manager = NULL) {
     $dependencies = $this->findConfigEntityDependents($type, $names, $dependency_manager);
-    $entities = array();
+    $entities = [];
     $definitions = $this->entityManager->getDefinitions();
     foreach ($dependencies as $config_name => $dependency) {
       // Group by entity type to efficient load entities using
@@ -283,7 +278,7 @@ class ConfigManager implements ConfigManagerInterface {
         $entities[$entity_type_id][] = $id;
       }
     }
-    $entities_to_return = array();
+    $entities_to_return = [];
     foreach ($entities as $entity_type_id => $entities_to_load) {
       $storage = $this->entityManager->getStorage($entity_type_id);
       // Remove the keys since there are potential ID clashes from different
@@ -302,7 +297,7 @@ class ConfigManager implements ConfigManagerInterface {
     $dependency_manager = $this->getConfigDependencyManager();
     $dependents = $this->findConfigEntityDependentsAsEntities($type, $names, $dependency_manager);
     $original_dependencies = $dependents;
-    $delete_uuids = $update_uuids = [];
+    $delete_uuids = [];
 
     $return = [
       'update' => [],
@@ -310,10 +305,18 @@ class ConfigManager implements ConfigManagerInterface {
       'unchanged' => [],
     ];
 
+    // Create a map of UUIDs to $original_dependencies key so that we can remove
+    // fixed dependencies.
+    $uuid_map = [];
+    foreach ($original_dependencies as $key => $entity) {
+      $uuid_map[$entity->uuid()] = $key;
+    }
+
     // Try to fix any dependencies and find out what will happen to the
     // dependency graph. Entities are processed in the order of most dependent
-    // first. For example, this ensures that fields are removed before
-    // field storages.
+    // first. For example, this ensures that Menu UI third party dependencies on
+    // node types are fixed before processing the node type's other
+    // dependencies.
     while ($dependent = array_pop($dependents)) {
       /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $dependent */
       if ($dry_run) {
@@ -344,20 +347,23 @@ class ConfigManager implements ConfigManagerInterface {
           }
         }
         if ($fixed) {
+          // Remove the fixed dependency from the list of original dependencies.
+          unset($original_dependencies[$uuid_map[$dependent->uuid()]]);
           $return['update'][] = $dependent;
-          $update_uuids[] = $dependent->uuid();
         }
       }
       // If the entity cannot be fixed then it has to be deleted.
       if (!$fixed) {
         $delete_uuids[] = $dependent->uuid();
-        $return['delete'][] = $dependent;
+        // Deletes should occur in the order of the least dependent first. For
+        // example, this ensures that fields are removed before field storages.
+        array_unshift($return['delete'], $dependent);
       }
     }
     // Use the lists of UUIDs to filter the original list to work out which
     // configuration entities are unchanged.
-    $return['unchanged'] = array_filter($original_dependencies, function ($dependent) use ($delete_uuids, $update_uuids) {
-      return !(in_array($dependent->uuid(), $delete_uuids) || in_array($dependent->uuid(), $update_uuids));
+    $return['unchanged'] = array_filter($original_dependencies, function ($dependent) use ($delete_uuids) {
+      return !(in_array($dependent->uuid(), $delete_uuids));
     });
 
     return $return;
@@ -405,12 +411,12 @@ class ConfigManager implements ConfigManagerInterface {
       return FALSE;
     }
 
-    $affected_dependencies = array(
-      'config' => array(),
-      'content' => array(),
-      'module' => array(),
-      'theme' => array(),
-    );
+    $affected_dependencies = [
+      'config' => [],
+      'content' => [],
+      'module' => [],
+      'theme' => [],
+    ];
 
     // Work out if any of the entity's dependencies are going to be affected.
     if (isset($entity_dependencies[$type])) {
@@ -459,8 +465,8 @@ class ConfigManager implements ConfigManagerInterface {
    * {@inheritdoc}
    */
   public function findMissingContentDependencies() {
-    $content_dependencies = array();
-    $missing_dependencies = array();
+    $content_dependencies = [];
+    $missing_dependencies = [];
     foreach ($this->activeStorage->readMultiple($this->activeStorage->listAll()) as $config_data) {
       if (isset($config_data['dependencies']['content'])) {
         $content_dependencies = array_merge($content_dependencies, $config_data['dependencies']['content']);
@@ -473,11 +479,11 @@ class ConfigManager implements ConfigManagerInterface {
       // Format of the dependency is entity_type:bundle:uuid.
       list($entity_type, $bundle, $uuid) = explode(':', $content_dependency, 3);
       if (!$this->entityManager->loadEntityByUuid($entity_type, $uuid)) {
-        $missing_dependencies[$uuid] = array(
+        $missing_dependencies[$uuid] = [
           'entity_type' => $entity_type,
           'bundle' => $bundle,
           'uuid' => $uuid,
-        );
+        ];
       }
     }
     return $missing_dependencies;

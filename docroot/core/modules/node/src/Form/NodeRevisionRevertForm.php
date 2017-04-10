@@ -1,13 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\node\Form\NodeRevisionRevertForm.
- */
-
 namespace Drupal\node\Form;
 
-use Drupal\Core\Datetime\DateFormatter;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\ConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -37,7 +32,7 @@ class NodeRevisionRevertForm extends ConfirmFormBase {
   /**
    * The date formatter service.
    *
-   * @var \Drupal\Core\Datetime\DateFormatter
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
    */
   protected $dateFormatter;
 
@@ -46,10 +41,10 @@ class NodeRevisionRevertForm extends ConfirmFormBase {
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $node_storage
    *   The node storage.
-   * @param \Drupal\Core\Datetime\DateFormatter $date_formatter
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
    *   The date formatter service.
    */
-  public function __construct(EntityStorageInterface $node_storage, DateFormatter $date_formatter) {
+  public function __construct(EntityStorageInterface $node_storage, DateFormatterInterface $date_formatter) {
     $this->nodeStorage = $node_storage;
     $this->dateFormatter = $date_formatter;
   }
@@ -82,7 +77,7 @@ class NodeRevisionRevertForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function getCancelUrl() {
-    return new Url('entity.node.version_history', array('node' => $this->revision->id()));
+    return new Url('entity.node.version_history', ['node' => $this->revision->id()]);
   }
 
   /**
@@ -125,7 +120,7 @@ class NodeRevisionRevertForm extends ConfirmFormBase {
     drupal_set_message(t('@type %title has been reverted to the revision from %revision-date.', ['@type' => node_get_type_label($this->revision), '%title' => $this->revision->label(), '%revision-date' => $this->dateFormatter->format($original_revision_timestamp)]));
     $form_state->setRedirect(
       'entity.node.version_history',
-      array('node' => $this->revision->id())
+      ['node' => $this->revision->id()]
     );
   }
 

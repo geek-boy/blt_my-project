@@ -1,9 +1,0 @@
-langcode: de
-status: true
-dependencies:
-  module:
-    - media_entity
-id: media.portrait_s
-label: 'Portrait S'
-targetEntityType: media
-cache: true

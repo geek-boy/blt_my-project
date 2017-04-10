@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\ViewsTemplateTest.
- */
-
 namespace Drupal\views\Tests;
 
 use Drupal\views\Views;
@@ -22,7 +17,7 @@ class ViewsTemplateTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_view_display_template');
+  public static $testViews = ['test_view_display_template'];
 
   /**
    * {@inheritdoc}
@@ -31,7 +26,7 @@ class ViewsTemplateTest extends ViewTestBase {
     parent::setUp(FALSE);
 
     $this->enableViewsTestModule();
-    ViewTestData::createTestViews(get_class($this), array('views_test_config'));
+    ViewTestData::createTestViews(get_class($this), ['views_test_config']);
   }
 
   /**

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\entity_test\Plugin\Field\FieldType\FieldTestItem.
- */
-
 namespace Drupal\entity_test\Plugin\Field\FieldType;
 
 use Drupal\Core\Field\FieldItemBase;
@@ -51,14 +46,14 @@ class FieldTestItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
-    return array(
-      'columns' => array(
-        'value' => array(
+    return [
+      'columns' => [
+        'value' => [
           'type' => 'varchar',
           'length' => 255,
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
   }
 
   /**

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\Plugin\DisplayAttachmentTest.
- */
-
 namespace Drupal\views\Tests\Plugin;
 
 use Drupal\views\Views;
@@ -22,21 +17,21 @@ class DisplayAttachmentTest extends PluginTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_display_attachment', 'test_attached_disabled');
+  public static $testViews = ['test_display_attachment', 'test_attached_disabled'];
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = array('node', 'views');
+  public static $modules = ['node', 'views'];
 
   protected function setUp() {
     parent::setUp();
 
     $this->enableViewsTestModule();
 
-    $admin_user = $this->drupalCreateUser(array('administer site configuration'));
+    $admin_user = $this->drupalCreateUser(['administer site configuration']);
     $this->drupalLogin($admin_user);
   }
 
@@ -107,4 +102,5 @@ class DisplayAttachmentTest extends PluginTestBase {
     $result = $this->xpath('//div[contains(@class, "attachment-after")]');
     $this->assertEqual(count($result), 0, 'The attachment_2 is not rendered.');
   }
+
 }

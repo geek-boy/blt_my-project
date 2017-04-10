@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Annotation\ContextDefinition.
- */
-
 namespace Drupal\Core\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
@@ -104,11 +99,11 @@ class ContextDefinition extends Plugin {
    *   ContextDefinitionInterface implementing class.
    */
   public function __construct(array $values) {
-    $values += array(
+    $values += [
       'required' => TRUE,
       'multiple' => FALSE,
       'default_value' => NULL,
-    );
+    ];
     // Annotation classes extract data from passed annotation classes directly
     // used in the classes they pass to.
     foreach (['label', 'description'] as $key) {

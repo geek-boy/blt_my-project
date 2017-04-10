@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\ViewTestBase.
- */
-
 namespace Drupal\views\Tests;
 
 use Drupal\Core\Database\Query\SelectInterface;
@@ -15,10 +10,10 @@ use Drupal\views\ViewExecutable;
  * Defines a base class for Views testing in the full web test environment.
  *
  * Use this base test class if you need to emulate a full Drupal installation.
- * When possible, ViewKernelTestBase should be used instead. Both base classes
+ * When possible, ViewsKernelTestBase should be used instead. Both base classes
  * include the same methods.
  *
- * @see \Drupal\views\Tests\ViewKernelTestBase
+ * @see \Drupal\Tests\views\Kernel\ViewsKernelTestBase
  * @see \Drupal\simpletest\WebTestBase
  */
 abstract class ViewTestBase extends WebTestBase {
@@ -30,12 +25,12 @@ abstract class ViewTestBase extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('views', 'views_test_config');
+  public static $modules = ['views', 'views_test_config'];
 
   protected function setUp($import_test_views = TRUE) {
     parent::setUp();
     if ($import_test_views) {
-      ViewTestData::createTestViews(get_class($this), array('views_test_config'));
+      ViewTestData::createTestViews(get_class($this), ['views_test_config']);
     }
   }
 
@@ -50,7 +45,7 @@ abstract class ViewTestBase extends WebTestBase {
     \Drupal::state()->set('views_test_data_schema', $this->schemaDefinition());
     \Drupal::state()->set('views_test_data_views_data', $this->viewsData());
 
-    \Drupal::service('module_installer')->install(array('views_test_data'));
+    \Drupal::service('module_installer')->install(['views_test_data']);
     $this->resetAll();
     $this->rebuildContainer();
     $this->container->get('module_handler')->reload();
@@ -96,7 +91,7 @@ abstract class ViewTestBase extends WebTestBase {
    *
    * @param string $id
    *   The HTML ID of the button
-   * @param string $label.
+   * @param string $label
    *   The expected label for the button.
    * @param string $message
    *   (optional) A custom message to display with the assertion. If no custom
@@ -106,7 +101,7 @@ abstract class ViewTestBase extends WebTestBase {
    *   TRUE if the assertion was successful, or FALSE on failure.
    */
   protected function helperButtonHasLabel($id, $expected_label, $message = 'Label has the expected value: %label.') {
-    return $this->assertFieldById($id, $expected_label, t($message, array('%label' => $expected_label)));
+    return $this->assertFieldById($id, $expected_label, t($message, ['%label' => $expected_label]));
   }
 
   /**
@@ -117,13 +112,13 @@ abstract class ViewTestBase extends WebTestBase {
    * @param array $args
    *   (optional) An array of the view arguments to use for the view.
    */
-  protected function executeView(ViewExecutable $view, $args = array()) {
+  protected function executeView(ViewExecutable $view, $args = []) {
     // A view does not really work outside of a request scope, due to many
     // dependencies like the current user.
     $view->setDisplay();
     $view->preExecute($args);
     $view->execute();
-    $verbose_message = '<pre>Executed view: ' . ((string) $view->build_info['query']). '</pre>';
+    $verbose_message = '<pre>Executed view: ' . ((string) $view->build_info['query']) . '</pre>';
     if ($view->build_info['query'] instanceof SelectInterface) {
       $verbose_message .= '<pre>Arguments: ' . print_r($view->build_info['query']->getArguments(), TRUE) . '</pre>';
     }

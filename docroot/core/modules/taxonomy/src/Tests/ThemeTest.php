@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\taxonomy\Tests\ThemeTest.
- */
-
 namespace Drupal\taxonomy\Tests;
 
 /**
@@ -19,7 +14,7 @@ class ThemeTest extends TaxonomyTestBase {
 
     // Make sure we are using distinct default and administrative themes for
     // the duration of these tests.
-    \Drupal::service('theme_handler')->install(array('bartik', 'seven'));
+    \Drupal::service('theme_handler')->install(['bartik', 'seven']);
     $this->config('system.theme')
       ->set('default', 'bartik')
       ->set('admin', 'seven')
@@ -27,14 +22,14 @@ class ThemeTest extends TaxonomyTestBase {
 
     // Create and log in as a user who has permission to add and edit taxonomy
     // terms and view the administrative theme.
-    $admin_user = $this->drupalCreateUser(array('administer taxonomy', 'view the administration theme'));
+    $admin_user = $this->drupalCreateUser(['administer taxonomy', 'view the administration theme']);
     $this->drupalLogin($admin_user);
   }
 
   /**
    * Test the theme used when adding, viewing and editing taxonomy terms.
    */
-  function testTaxonomyTermThemes() {
+  public function testTaxonomyTermThemes() {
     // Adding a term to a vocabulary is considered an administrative action and
     // should use the administrative theme.
     $vocabulary = $this->createVocabulary();
@@ -50,4 +45,5 @@ class ThemeTest extends TaxonomyTestBase {
     $this->drupalGet('taxonomy/term/' . $term->id() . '/edit');
     $this->assertRaw('seven/css/base/elements.css', t("The administrative theme's CSS appears on the page for editing a taxonomy term."));
   }
+
 }

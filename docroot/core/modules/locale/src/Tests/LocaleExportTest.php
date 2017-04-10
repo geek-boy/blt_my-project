@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\locale\Tests\LocaleExportTest.
- */
-
 namespace Drupal\locale\Tests;
 
 use Drupal\simpletest\WebTestBase;
@@ -21,7 +16,7 @@ class LocaleExportTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('locale');
+  public static $modules = ['locale'];
 
   /**
    * A user able to create languages and export translations.
@@ -34,12 +29,12 @@ class LocaleExportTest extends WebTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $this->adminUser = $this->drupalCreateUser(array('administer languages', 'translate interface', 'access administration pages'));
+    $this->adminUser = $this->drupalCreateUser(['administer languages', 'translate interface', 'access administration pages']);
     $this->drupalLogin($this->adminUser);
 
     // Copy test po files to the translations directory.
-    file_unmanaged_copy(drupal_get_path('module', 'locale') . '/tests/test.de.po', 'translations://', FILE_EXISTS_REPLACE);
-    file_unmanaged_copy(drupal_get_path('module', 'locale') . '/tests/test.xx.po', 'translations://', FILE_EXISTS_REPLACE);
+    file_unmanaged_copy(__DIR__ . '/../../tests/test.de.po', 'translations://', FILE_EXISTS_REPLACE);
+    file_unmanaged_copy(__DIR__ . '/../../tests/test.xx.po', 'translations://', FILE_EXISTS_REPLACE);
   }
 
   /**
@@ -48,18 +43,18 @@ class LocaleExportTest extends WebTestBase {
   public function testExportTranslation() {
     // First import some known translations.
     // This will also automatically add the 'fr' language.
-    $name = tempnam('temporary://', "po_") . '.po';
+    $name = \Drupal::service('file_system')->tempnam('temporary://', "po_") . '.po';
     file_put_contents($name, $this->getPoFile());
-    $this->drupalPostForm('admin/config/regional/translate/import', array(
+    $this->drupalPostForm('admin/config/regional/translate/import', [
       'langcode' => 'fr',
       'files[file]' => $name,
-    ), t('Import'));
+    ], t('Import'));
     drupal_unlink($name);
 
     // Get the French translations.
-    $this->drupalPostForm('admin/config/regional/translate/export', array(
+    $this->drupalPostForm('admin/config/regional/translate/export', [
       'langcode' => 'fr',
-    ), t('Export'));
+    ], t('Export'));
 
     // Ensure we have a translation file.
     $this->assertRaw('# French translation of Drupal', 'Exported French translation file.');
@@ -67,13 +62,13 @@ class LocaleExportTest extends WebTestBase {
     $this->assertRaw('msgstr "lundi"', 'French translations present in exported file.');
 
     // Import some more French translations which will be marked as customized.
-    $name = tempnam('temporary://', "po2_") . '.po';
+    $name = \Drupal::service('file_system')->tempnam('temporary://', "po2_") . '.po';
     file_put_contents($name, $this->getCustomPoFile());
-    $this->drupalPostForm('admin/config/regional/translate/import', array(
+    $this->drupalPostForm('admin/config/regional/translate/import', [
       'langcode' => 'fr',
       'files[file]' => $name,
       'customized' => 1,
-    ), t('Import'));
+    ], t('Import'));
     drupal_unlink($name);
 
     // Create string without translation in the locales_source table.
@@ -84,12 +79,12 @@ class LocaleExportTest extends WebTestBase {
       ->save();
 
     // Export only customized French translations.
-    $this->drupalPostForm('admin/config/regional/translate/export', array(
+    $this->drupalPostForm('admin/config/regional/translate/export', [
       'langcode' => 'fr',
       'content_options[not_customized]' => FALSE,
       'content_options[customized]' => TRUE,
       'content_options[not_translated]' => FALSE,
-    ), t('Export'));
+    ], t('Export'));
 
     // Ensure we have a translation file.
     $this->assertRaw('# French translation of Drupal', 'Exported French translation file with only customized strings.');
@@ -99,12 +94,12 @@ class LocaleExportTest extends WebTestBase {
     $this->assertNoRaw('msgid "February"', 'Untranslated string not present in exported file.');
 
     // Export only untranslated French translations.
-    $this->drupalPostForm('admin/config/regional/translate/export', array(
+    $this->drupalPostForm('admin/config/regional/translate/export', [
       'langcode' => 'fr',
       'content_options[not_customized]' => FALSE,
       'content_options[customized]' => FALSE,
       'content_options[not_translated]' => TRUE,
-    ), t('Export'));
+    ], t('Export'));
 
     // Ensure we have a translation file.
     $this->assertRaw('# French translation of Drupal', 'Exported French translation file with only untranslated strings.');
@@ -123,7 +118,7 @@ class LocaleExportTest extends WebTestBase {
     // the locales_source table gets populated with something.
     $this->drupalGet('admin/config/regional/language');
     // Get the translation template file.
-    $this->drupalPostForm('admin/config/regional/translate/export', array(), t('Export'));
+    $this->drupalPostForm('admin/config/regional/translate/export', [], t('Export'));
     // Ensure we have a translation file.
     $this->assertRaw('# LANGUAGE translation of PROJECT', 'Exported translation template file.');
   }

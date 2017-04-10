@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\taxonomy\Tests\Views\TaxonomyRelationshipTest.
- */
-
 namespace Drupal\taxonomy\Tests\Views;
 
 use Drupal\node\NodeInterface;
@@ -23,14 +18,14 @@ class TaxonomyRelationshipTest extends TaxonomyTestBase {
    *
    * @var \Drupal\taxonomy\TermInterface[]
    */
-  protected $terms = array();
+  protected $terms = [];
 
   /**
    * Views used by this test.
    *
    * @var array
    */
-  public static $testViews = array('test_taxonomy_term_relationship');
+  public static $testViews = ['test_taxonomy_term_relationship'];
 
   /**
    * {@inheritdoc}

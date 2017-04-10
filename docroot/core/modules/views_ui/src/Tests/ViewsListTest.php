@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_ui\Tests\ViewsListTest.
- */
-
 namespace Drupal\views_ui\Tests;
 
 use Drupal\simpletest\WebTestBase;
@@ -23,7 +18,7 @@ class ViewsListTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('block', 'views_ui');
+  public static $modules = ['block', 'views_ui'];
 
   /**
    * A user with permission to administer views.
@@ -51,7 +46,7 @@ class ViewsListTest extends WebTestBase {
     // Check if we can access the main views admin page.
     $this->drupalGet('admin/structure/views');
     $this->assertResponse(200);
-    $this->assertLink(t('Add new view'));
+    $this->assertLink(t('Add view'));
 
     // Count default views to be subtracted from the limit.
     $views = count(Views::getEnabledViews());

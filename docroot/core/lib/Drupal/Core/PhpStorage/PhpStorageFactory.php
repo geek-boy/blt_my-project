@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\PhpStorage\PhpStorageFactory.
- */
-
 namespace Drupal\Core\PhpStorage;
 
 use Drupal\Core\Site\Settings;
@@ -33,8 +28,8 @@ class PhpStorageFactory {
    * @return \Drupal\Component\PhpStorage\PhpStorageInterface
    *   An instantiated storage for the specified name.
    */
-  static function get($name) {
-    $configuration = array();
+  public static function get($name) {
+    $configuration = [];
     $overrides = Settings::get('php_storage');
     if (isset($overrides[$name])) {
       $configuration = $overrides[$name];

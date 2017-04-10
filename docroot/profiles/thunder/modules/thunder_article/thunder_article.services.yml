@@ -1,6 +1,0 @@
-services:
-  thunder_article.breadcrumb.default:
-    class: Drupal\thunder_article\Breadcrumb\ThunderArticleBreadcrumbBuilder
-    arguments: ['@entity.manager']
-    tags:
-      - { name: breadcrumb_builder, priority: 100 }

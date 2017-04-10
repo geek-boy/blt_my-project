@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\field\Plugin\migrate\process\d6\FieldSettings.
- */
-
 namespace Drupal\field\Plugin\migrate\process\d6;
 
 use Drupal\migrate\MigrateExecutableInterface;
@@ -64,26 +59,26 @@ class FieldSettings extends ProcessPluginBase {
       }
     }
 
-    $settings = array(
-      'text' => array(
+    $settings = [
+      'text' => [
         'max_length' => $max_length,
-      ),
-      'datetime' => array('datetime_type' => 'datetime'),
-      'list_string' => array(
+      ],
+      'datetime' => ['datetime_type' => 'datetime'],
+      'list_string' => [
         'allowed_values' => $allowed_values,
-      ),
-      'list_integer' => array(
+      ],
+      'list_integer' => [
         'allowed_values' => $allowed_values,
-      ),
-      'list_float' => array(
+      ],
+      'list_float' => [
         'allowed_values' => $allowed_values,
-      ),
-      'boolean' => array(
+      ],
+      'boolean' => [
         'allowed_values' => $allowed_values,
-      ),
-    );
+      ],
+    ];
 
-    return isset($settings[$field_type]) ? $settings[$field_type] : array();
+    return isset($settings[$field_type]) ? $settings[$field_type] : [];
   }
 
 }

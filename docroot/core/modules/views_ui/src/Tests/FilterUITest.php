@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views_ui\Tests\FilterUITest.
- */
-
 namespace Drupal\views_ui\Tests;
 
 use Drupal\views\Tests\ViewTestBase;
@@ -22,21 +17,21 @@ class FilterUITest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_filter_in_operator_ui', 'test_filter_groups');
+  public static $testViews = ['test_filter_in_operator_ui', 'test_filter_groups'];
 
   /**
    * Modules to enable.
    *
    * @var array
    */
-  public static $modules = array('views_ui', 'node');
+  public static $modules = ['views_ui', 'node'];
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
     parent::setUp();
-    $this->drupalCreateContentType(array('type' => 'page'));
+    $this->drupalCreateContentType(['type' => 'page']);
     $this->enableViewsTestModule();
   }
 
@@ -44,7 +39,7 @@ class FilterUITest extends ViewTestBase {
    * Tests that an option for a filter is saved as expected from the UI.
    */
   public function testFilterInOperatorUi() {
-    $admin_user = $this->drupalCreateUser(array('administer views', 'administer site configuration'));
+    $admin_user = $this->drupalCreateUser(['administer views', 'administer site configuration']);
     $this->drupalLogin($admin_user);
 
     $path = 'admin/structure/views/nojs/handler/test_filter_in_operator_ui/default/filter/type';
@@ -53,9 +48,9 @@ class FilterUITest extends ViewTestBase {
     $this->assertFieldByName('options[expose][reduce]', FALSE);
 
     // Select "Limit list to selected items" option and apply.
-    $edit = array(
+    $edit = [
       'options[expose][reduce]' => TRUE,
-    );
+    ];
     $this->drupalPostForm($path, $edit, t('Apply'));
 
     // Verifies that the option was saved as expected.
@@ -67,12 +62,12 @@ class FilterUITest extends ViewTestBase {
    * Tests the filters from the UI.
    */
   public function testFiltersUI() {
-    $admin_user = $this->drupalCreateUser(array('administer views', 'administer site configuration'));
+    $admin_user = $this->drupalCreateUser(['administer views', 'administer site configuration']);
     $this->drupalLogin($admin_user);
 
     $this->drupalGet('admin/structure/views/view/test_filter_groups');
 
-    $this->assertLink('Content: Node ID (= 1)', 0, 'Content: Node ID (= 1) link appears correctly.');
+    $this->assertLink('Content: ID (= 1)', 0, 'Content: ID (= 1) link appears correctly.');
 
     // Tests that we can create a new filter group from UI.
     $this->drupalGet('admin/structure/views/nojs/rearrange-filter/test_filter_groups/page');
@@ -93,6 +88,36 @@ class FilterUITest extends ViewTestBase {
 
     // Group 3 now does not exist.
     $this->assertNoRaw('<span>Group 3</span>', 'Group 3 has not been added yet.');
+  }
+
+  /**
+   * Tests the identifier settings and restrictions.
+   */
+  public function testFilterIdentifier() {
+    $admin_user = $this->drupalCreateUser(['administer views', 'administer site configuration']);
+    $this->drupalLogin($admin_user);
+    $path = 'admin/structure/views/nojs/handler/test_filter_in_operator_ui/default/filter/type';
+
+    // Set an empty identifier.
+    $edit = [
+      'options[expose][identifier]' => '',
+    ];
+    $this->drupalPostForm($path, $edit, t('Apply'));
+    $this->assertText('The identifier is required if the filter is exposed.');
+
+    // Set the identifier to 'value'.
+    $edit = [
+      'options[expose][identifier]' => 'value',
+    ];
+    $this->drupalPostForm($path, $edit, t('Apply'));
+    $this->assertText('This identifier is not allowed.');
+
+    // Set the identifier to a value with a restricted character.
+    $edit = [
+      'options[expose][identifier]' => 'value value',
+    ];
+    $this->drupalPostForm($path, $edit, t('Apply'));
+    $this->assertText('This identifier has illegal characters.');
   }
 
 }

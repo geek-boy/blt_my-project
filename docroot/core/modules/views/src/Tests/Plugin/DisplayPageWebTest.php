@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\Plugin\DisplayPageWebTest.
- */
-
 namespace Drupal\views\Tests\Plugin;
 
 use Drupal\system\Tests\Cache\AssertPageCacheContextsAndTagsTrait;
@@ -24,7 +19,7 @@ class DisplayPageWebTest extends PluginTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_page_display', 'test_page_display_arguments', 'test_page_display_menu', 'test_page_display_path');
+  public static $testViews = ['test_page_display', 'test_page_display_arguments', 'test_page_display_menu', 'test_page_display_path'];
 
   /**
    * Modules to enable.
@@ -93,10 +88,10 @@ class DisplayPageWebTest extends PluginTestBase {
     // Check local tasks.
     $this->drupalGet('test_page_display_menu');
     $this->assertResponse(200);
-    $element = $this->xpath('//ul[contains(@class, :ul_class)]//a[contains(@class, :a_class)]', array(
+    $element = $this->xpath('//ul[contains(@class, :ul_class)]//a[contains(@class, :a_class)]', [
       ':ul_class' => 'tabs primary',
       ':a_class' => 'is-active',
-    ));
+    ]);
     $this->assertEqual((string) $element[0], t('Test default tab'));
     $this->assertTitle(t('Test default page | Drupal'));
 
@@ -105,10 +100,10 @@ class DisplayPageWebTest extends PluginTestBase {
 
     $this->drupalGet('test_page_display_menu/local');
     $this->assertResponse(200);
-    $element = $this->xpath('//ul[contains(@class, :ul_class)]//a[contains(@class, :a_class)]', array(
+    $element = $this->xpath('//ul[contains(@class, :ul_class)]//a[contains(@class, :a_class)]', [
       ':ul_class' => 'tabs primary',
       ':a_class' => 'is-active',
-    ));
+    ]);
     $this->assertEqual((string) $element[0], t('Test local tab'));
     $this->assertTitle(t('Test local page | Drupal'));
 
@@ -157,7 +152,7 @@ class DisplayPageWebTest extends PluginTestBase {
    * @param string $path
    *   Path that will be set as the view page display path.
    *
-   * @return boolean
+   * @return bool
    *   Assertion result.
    */
   public function assertPagePath($path) {

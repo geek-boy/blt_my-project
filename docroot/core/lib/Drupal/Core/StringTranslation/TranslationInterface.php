@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\StringTranslation\TranslationInterface.
- */
-
 namespace Drupal\Core\StringTranslation;
 
 /**
@@ -50,7 +45,7 @@ interface TranslationInterface {
    *
    * @ingroup sanitization
    */
-  public function translate($string, array $args = array(), array $options = array());
+  public function translate($string, array $args = [], array $options = []);
 
   /**
    * Translates a TranslatableMarkup object to a string.
@@ -112,6 +107,6 @@ interface TranslationInterface {
    * @see \Drupal\Component\Utility\SafeMarkup::format()
    * @see \Drupal\Core\StringTranslation\PluralTranslatableMarkup::createFromTranslatedString()
    */
-  public function formatPlural($count, $singular, $plural, array $args = array(), array $options = array());
+  public function formatPlural($count, $singular, $plural, array $args = [], array $options = []);
 
 }

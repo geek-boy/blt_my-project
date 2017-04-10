@@ -10,6 +10,7 @@ namespace Drupal\Tests\simpletest\Unit;
 use Composer\Autoload\ClassLoader;
 use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\simpletest\Exception\MissingGroupException;
 use Drupal\simpletest\TestDiscovery;
 use Drupal\Tests\UnitTestCase;
 use org\bovigo\vfs\vfsStream;
@@ -25,7 +26,7 @@ class TestInfoParsingTest extends UnitTestCase {
    * @dataProvider infoParserProvider
    */
   public function testTestInfoParser($expected, $classname, $doc_comment = NULL) {
-    $info = \Drupal\simpletest\TestDiscovery::getTestInfo($classname, $doc_comment);
+    $info = TestDiscovery::getTestInfo($classname, $doc_comment);
     $this->assertEquals($expected, $info);
   }
 
@@ -60,13 +61,13 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\Tests\simpletest\Functional\BrowserTestBaseTest',
-        'group' => 'simpletest',
+        'name' => 'Drupal\FunctionalTests\BrowserTestBaseTest',
+        'group' => 'browsertestbase',
         'description' => 'Tests BrowserTestBase functionality.',
         'type' => 'PHPUnit-Functional',
       ],
       // Classname.
-      'Drupal\Tests\simpletest\Functional\BrowserTestBaseTest',
+      'Drupal\FunctionalTests\BrowserTestBaseTest',
     ];
 
     // kernel PHPUnit test.
@@ -87,18 +88,18 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards.',
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'group' => 'simpletest',
+        'description' => 'Tests the Simpletest UI internal browser.',
         'type' => 'Simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
- * Bulk delete storages and fields, and clean up afterwards.
+ * Tests the Simpletest UI internal browser.
  *
- * @group field
+ * @group simpletest
  */
  ",
     ];
@@ -107,18 +108,19 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards.',
-        'type' => 'Simpletest'
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'group' => 'simpletest',
+        'description' => 'Tests the Simpletest UI internal browser.',
+        'type' => 'Simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
-   * Bulk delete storages and fields, and clean up afterwards.
+   * Tests the Simpletest UI internal browser.
    *
-   * @group field
+   * @group simpletest
+   */
    */
  ",
     ];
@@ -128,18 +130,18 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards. * @',
-        'type' => 'Simpletest'
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'group' => 'simpletest',
+        'description' => 'Tests the Simpletest UI internal browser. * @',
+        'type' => 'Simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
-   * Bulk delete storages and fields, and clean up afterwards. * @
+   * Tests the Simpletest UI internal browser. * @
    *
-   * @group field
+   * @group simpletest
    */
  ",
     ];
@@ -148,19 +150,19 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
         'group' => 'Test',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards.',
-        'type' => 'Simpletest'
+        'description' => 'Tests the Simpletest UI internal browser.',
+        'type' => 'Simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
- * Bulk delete storages and fields, and clean up afterwards.
+ * Tests the Simpletest UI internal browser.
  *
  * @group Test
- * @group field
+ * @group simpletest
  */
  ",
     ];
@@ -169,20 +171,20 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards.',
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'description' => 'Tests the Simpletest UI internal browser.',
+        'type' => 'Simpletest',
         'requires' => ['module' => ['test']],
-        'type' => 'Simpletest'
+        'group' => 'simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
- * Bulk delete storages and fields, and clean up afterwards.
+ * Tests the Simpletest UI internal browser.
  *
  * @dependencies test
- * @group field
+ * @group simpletest
  */
  ",
     ];
@@ -191,20 +193,20 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards.',
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'description' => 'Tests the Simpletest UI internal browser.',
+        'type' => 'Simpletest',
         'requires' => ['module' => ['test', 'test1', 'test2']],
-        'type' => 'Simpletest'
+        'group' => 'simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
- * Bulk delete storages and fields, and clean up afterwards.
+ * Tests the Simpletest UI internal browser.
  *
- * @dependencies test, test1,test2
- * @group field
+ * @dependencies test, test1, test2
+ * @group simpletest
  */
  ",
     ];
@@ -213,18 +215,19 @@ class TestInfoParsingTest extends UnitTestCase {
     $tests[] = [
       // Expected result.
       [
-        'name' => 'Drupal\field\Tests\BulkDeleteTest',
-        'group' => 'field',
-        'description' => 'Bulk delete storages and fields, and clean up afterwards. And the summary line continues and there is no gap to the annotation.',
-        'type' => 'Simpletest'
+        'name' => 'Drupal\simpletest\Tests\ExampleSimpleTest',
+        'description' => 'Tests the Simpletest UI internal browser. And the summary line continues an there is no gap to the annotation.',
+        'type' => 'Simpletest',
+        'group' => 'simpletest',
       ],
       // Classname.
-      'Drupal\field\Tests\BulkDeleteTest',
+      'Drupal\simpletest\Tests\ExampleSimpleTest',
       // Doc block.
       "/**
- * Bulk delete storages and fields, and clean up afterwards. And the summary
- * line continues and there is no gap to the annotation.
- * @group field
+ * Tests the Simpletest UI internal browser. And the summary line continues an
+ * there is no gap to the annotation.
+ *
+ * @group simpletest
  */
  ",
     ];
@@ -233,30 +236,29 @@ class TestInfoParsingTest extends UnitTestCase {
 
   /**
    * @covers ::getTestInfo
-   * @expectedException \Drupal\simpletest\Exception\MissingGroupException
-   * @expectedExceptionMessage Missing @group annotation in Drupal\field\Tests\BulkDeleteTest
    */
   public function testTestInfoParserMissingGroup() {
-    $classname = 'Drupal\field\Tests\BulkDeleteTest';
+    $classname = 'Drupal\KernelTests\field\BulkDeleteTest';
     $doc_comment = <<<EOT
 /**
  * Bulk delete storages and fields, and clean up afterwards.
  */
 EOT;
-    \Drupal\simpletest\TestDiscovery::getTestInfo($classname, $doc_comment);
+    $this->setExpectedException(MissingGroupException::class, 'Missing @group annotation in Drupal\KernelTests\field\BulkDeleteTest');
+    TestDiscovery::getTestInfo($classname, $doc_comment);
   }
 
   /**
    * @covers ::getTestInfo
    */
   public function testTestInfoParserMissingSummary() {
-    $classname = 'Drupal\field\Tests\BulkDeleteTest';
+    $classname = 'Drupal\KernelTests\field\BulkDeleteTest';
     $doc_comment = <<<EOT
 /**
  * @group field
  */
 EOT;
-    $info = \Drupal\simpletest\TestDiscovery::getTestInfo($classname, $doc_comment);
+    $info = TestDiscovery::getTestInfo($classname, $doc_comment);
     $this->assertEmpty($info['description']);
   }
 
@@ -398,7 +400,7 @@ class TestTestDiscovery extends TestDiscovery {
     $data['simpletest-kerneltest'] = ['\Drupal\hal\Tests\FileNormalizeTest', FALSE];
     $data['module-unittest'] = [static::class, 'Unit'];
     $data['module-kerneltest'] = ['\Drupal\KernelTests\Core\Theme\TwigMarkupInterfaceTest', 'Kernel'];
-    $data['module-functionaltest'] = ['\Drupal\Tests\simpletest\Functional\BrowserTestBaseTest', 'Functional'];
+    $data['module-functionaltest'] = ['\Drupal\FunctionalTests\BrowserTestBaseTest', 'Functional'];
     $data['module-functionaljavascripttest'] = ['\Drupal\Tests\toolbar\FunctionalJavascript\ToolbarIntegrationTest', 'FunctionalJavascript'];
     $data['core-unittest'] = ['\Drupal\Tests\ComposerIntegrationTest', 'Unit'];
     $data['core-unittest2'] = ['Drupal\Tests\Core\DrupalTest', 'Unit'];
@@ -409,4 +411,16 @@ class TestTestDiscovery extends TestDiscovery {
     return $data;
   }
 
+}
+
+namespace Drupal\simpletest\Tests;
+
+use Drupal\simpletest\WebTestBase;
+
+/**
+ * Tests the Simpletest UI internal browser.
+ *
+ * @group simpletest
+ */
+class ExampleSimpleTest extends WebTestBase {
 }

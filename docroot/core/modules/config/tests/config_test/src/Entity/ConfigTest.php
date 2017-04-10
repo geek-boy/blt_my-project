@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\config_test\Entity\ConfigTest.
- */
-
 namespace Drupal\config_test\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -93,10 +88,10 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     // Used to test secondary writes during config sync.
     if ($this->id() == 'primary') {
-      $secondary = $storage->create(array(
+      $secondary = $storage->create([
         'id' => 'secondary',
         'label' => 'Secondary Default',
-      ));
+      ]);
       $secondary->save();
     }
     if ($this->id() == 'deleter') {
@@ -131,7 +126,7 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
     if (!isset($this->dependencies['enforced']['config'])) {
       return $changed;
     }
-    $fix_deps = \Drupal::state()->get('config_test.fix_dependencies', array());
+    $fix_deps = \Drupal::state()->get('config_test.fix_dependencies', []);
     foreach ($dependencies['config'] as $entity) {
       if (in_array($entity->getConfigDependencyName(), $fix_deps)) {
         $key = array_search($entity->getConfigDependencyName(), $this->dependencies['enforced']['config']);
@@ -140,6 +135,10 @@ class ConfigTest extends ConfigEntityBase implements ConfigTestInterface {
           unset($this->dependencies['enforced']['config'][$key]);
         }
       }
+    }
+    // If any of the dependencies removed still exists, return FALSE.
+    if (array_intersect_key(array_flip($this->dependencies['enforced']['config']), $dependencies['config'])) {
+      return FALSE;
     }
     return $changed;
   }

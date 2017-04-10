@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\ViewRenderTest.
- */
-
 namespace Drupal\views\Tests;
 
 use Drupal\views\Views;
@@ -21,7 +16,7 @@ class ViewRenderTest extends ViewTestBase {
    *
    * @var array
    */
-  public static $testViews = array('test_view_render');
+  public static $testViews = ['test_view_render'];
 
   protected function setUp() {
     parent::setUp();

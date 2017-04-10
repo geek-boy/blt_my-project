@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Tests\Entity\ViewNonTranslatableEntityTest.
- */
-
 namespace Drupal\views\Tests\Entity;
 
 use Drupal\language\Entity\ConfigurableLanguage;
@@ -23,12 +18,12 @@ class ViewNonTranslatableEntityTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array(
+  public static $modules = [
     'entity_test',
     'content_translation',
     'language_test',
     'views_ui',
-  );
+  ];
 
   /**
    * Tests displaying a view of non-translatable entities.

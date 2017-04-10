@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\taxonomy\Tests\Views\TermNameFieldTest.
- */
-
 namespace Drupal\taxonomy\Tests\Views;
 
 use Drupal\views\Views;
@@ -21,7 +16,7 @@ class TermNameFieldTest extends TaxonomyTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $testViews = array('test_taxonomy_term_name');
+  public static $testViews = ['test_taxonomy_term_name'];
 
   /**
    * Tests term name field plugin functionality.
