@@ -5,4 +5,5 @@ events:
       - hello:
           type: script
           script:
-            - echo "Hello, Clem Fandango!" > docroot/hello.txt
+            - mkdir docroot
+            - echo "Hello, Pipelines!" > docroot/hello.txt
