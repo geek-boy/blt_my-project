@@ -6,4 +6,4 @@ events:
           type: script
           script:
             - mkdir docroot
-            - echo "Hello, Pipelines!" > docroot/hello.txt
+            - echo "Hello, Sailor Moon!" > docroot/hello.txt
