@@ -144,11 +144,6 @@
  * @code
  *   'prefix' => 'main_',
  * @endcode
- *
- * Per-table prefixes are deprecated as of Drupal 8.2, and will be removed in
- * Drupal 9.0. After that, only a single prefix for all tables will be
- * supported.
- *
  * To provide prefixes for specific tables, set 'prefix' as an array.
  * The array's keys are the table names and the values are the prefixes.
  * The 'default' element is mandatory and holds the prefix for any tables
@@ -270,11 +265,6 @@ $config_directories = array();
  * by the user.
  *
  * @see install_select_profile()
- *
- * @deprecated in Drupal 8.3.0 and will be removed before Drupal 9.0.0. The
- *   install profile is written to the core.extension configuration. If a
- *   service requires the install profile use the 'install_profile' container
- *   parameter. Functional code can use \Drupal::installProfile().
  */
 # $settings['install_profile'] = '';
 
@@ -426,20 +416,6 @@ $settings['update_free_access'] = FALSE;
  * getting cached pages from the proxy.
  */
 # $settings['omit_vary_cookie'] = TRUE;
-
-
-/**
- * Cache TTL for client error (4xx) responses.
- *
- * Items cached per-URL tend to result in a large number of cache items, and
- * this can be problematic on 404 pages which by their nature are unbounded. A
- * fixed TTL can be set for these items, defaulting to one hour, so that cache
- * backends which do not support LRU can purge older entries. To disable caching
- * of client error responses set the value to 0. Currently applies only to
- * page_cache module.
- */
-# $settings['cache_ttl_4xx'] = 3600;
-
 
 /**
  * Class Loader.
@@ -677,7 +653,7 @@ if ($settings['hash_salt']) {
 /**
  * Load services definition file.
  */
-$settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
+$settings['container_yamls'][] = __DIR__ . '/services.yml';
 
 /**
  * Override the default service container class.
@@ -687,15 +663,6 @@ $settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
  * to test a service container that throws an exception.
  */
 # $settings['container_base_class'] = '\Drupal\Core\DependencyInjection\Container';
-
-/**
- * Override the default yaml parser class.
- *
- * Provide a fully qualified class name here if you would like to provide an
- * alternate implementation YAML parser. The class must implement the
- * \Drupal\Component\Serialization\SerializationInterface interface.
- */
-# $settings['yaml_parser_class'] = NULL;
 
 /**
  * Trusted host configuration.
@@ -735,21 +702,6 @@ $settings['container_yamls'][] = $app_root . '/' . $site_path . '/services.yml';
  */
 
 /**
- * The default list of directories that will be ignored by Drupal's file API.
- *
- * By default ignore node_modules and bower_components folders to avoid issues
- * with common frontend tools and recursive scanning of directories looking for
- * extensions.
- *
- * @see file_scan_directory()
- * @see \Drupal\Core\Extension\ExtensionDiscovery::scanDirectory()
- */
-$settings['file_scan_ignore_directories'] = [
-  'node_modules',
-  'bower_components',
-];
-
-/**
  * Load local development override configuration, if available.
  *
  * Use settings.local.php to override variables on secondary (staging,
@@ -759,23 +711,10 @@ $settings['file_scan_ignore_directories'] = [
  *
  * Keep this code block at the end of this file to take full effect.
  */
-#
-# if (file_exists($app_root . '/' . $site_path . '/settings.local.php')) {
-#   include $app_root . '/' . $site_path . '/settings.local.php';
+# if (file_exists(__DIR__ . '/settings.local.php')) {
+#   include __DIR__ . '/settings.local.php';
 # }
-
-// Initialize install_profile to the Drupal distribution name detected by the Acquia Cloud installation process.
-if (class_exists('Drupal') && defined('Drupal::CORE_COMPATIBILITY') && Drupal::CORE_COMPATIBILITY == '8.x') {
- if (!isset($settings['install_profile'])) {
-    $settings['install_profile'] = 'lightning';
-  }
-}
-
-
-// On Acquia Cloud, this include file configures Drupal to use the correct
-// database in each site environment (Dev, Stage, or Prod). To use this
-// settings.php for development on your local workstation, set $db_url
-// (Drupal 5 or 6) or $databases (Drupal 7 or 8) as described in comments above.
-if (file_exists('/var/www/site-php')) {
-  require('/var/www/site-php/eemcorben/eemcorben-settings.inc');
-}
+# Database configuration line using Acquia Cloud Environment Variables
+require("/var/www/site-php/".$_ENV['AH_SITE_GROUP']."/".$_ENV['AH_SITE_GROUP']."-settings.inc");
+# Adding a work around to an integration issue involving Acquia Cloud, D8, and Install profiles to allow for installation
+$settings["install_profile"] = "";
