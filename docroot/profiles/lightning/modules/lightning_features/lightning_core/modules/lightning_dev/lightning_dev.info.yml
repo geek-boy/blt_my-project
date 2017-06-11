@@ -1,0 +1,16 @@
+name: 'Lightning Dev'
+# core: 8.x
+type: module
+package: Lightning
+description: 'Development tools for working on the Lightning distribution itself.'
+# version: '8.x-2.13'
+hidden: true
+dependencies:
+  - devel_generate
+  - lightning_core
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597

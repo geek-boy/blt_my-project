@@ -764,6 +764,13 @@ $settings['file_scan_ignore_directories'] = [
 #   include $app_root . '/' . $site_path . '/settings.local.php';
 # }
 
+// Initialize install_profile to the Drupal distribution name detected by the Acquia Cloud installation process.
+if (class_exists('Drupal') && defined('Drupal::CORE_COMPATIBILITY') && Drupal::CORE_COMPATIBILITY == '8.x') {
+ if (!isset($settings['install_profile'])) {
+    $settings['install_profile'] = 'lightning';
+  }
+}
+
 
 // On Acquia Cloud, this include file configures Drupal to use the correct
 // database in each site environment (Dev, Stage, or Prod). To use this

@@ -1,0 +1,14 @@
+name: 'Contact Form'
+# core: 8.x
+type: module
+package: Lightning
+description: 'Provides a site-wide contact form with basic default configuration.'
+# version: '8.x-2.13'
+dependencies:
+  - contact_storage
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597

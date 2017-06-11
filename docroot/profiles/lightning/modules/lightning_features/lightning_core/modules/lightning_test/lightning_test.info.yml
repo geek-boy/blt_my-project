@@ -1,0 +1,13 @@
+name: 'Lightning Test'
+# core: 8.x
+type: module
+description: 'Contains configuration and support code for running Lightning functional tests.'
+package: Lightning
+# version: '8.x-2.13'
+hidden: true
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597

@@ -1,0 +1,24 @@
+name: 'Lightning Core'
+# core: 8.x
+type: module
+package: Lightning
+description: 'Shared functionality for the Lightning distribution.'
+# version: '8.x-2.13'
+dependencies:
+  - menu_ui
+  - metatag
+  - node
+  - path
+  - text
+  - user
+components:
+  - lightning_contact_form
+  - lightning_page
+  - lightning_roles
+  - lightning_search
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597

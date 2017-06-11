@@ -1,0 +1,16 @@
+name: 'Media Image'
+# core: 8.x
+type: module
+package: Lightning
+description: 'Image support for Lightning Media.'
+# version: '8.x-2.13'
+dependencies:
+  - image
+  - lightning_media
+  - media_entity_image
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597

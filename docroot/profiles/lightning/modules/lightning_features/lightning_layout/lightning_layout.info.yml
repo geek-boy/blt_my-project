@@ -1,0 +1,19 @@
+name: 'Lightning Layout'
+# core: 8.x
+type: module
+description: 'Provides the tools to take control of your layout.'
+# version: '8.x-2.13'
+package: Lightning
+dependencies:
+  - lightning_core
+  - page_manager
+  - panelizer
+  - panelizer_quickedit
+components:
+  - lightning_landing_page
+
+# Information added by Drupal.org packaging script on 2017-05-03
+version: '8.x-2.13'
+core: '8.x'
+project: 'lightning'
+datestamp: 1493843597
