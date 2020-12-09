@@ -8,7 +8,12 @@ events:
             - composer validate --no-check-all --ansi
 #            # The composer create project files and settings.php db and profile configurations have been provided in the tutorial branch or release. We only need run composer.
             - composer install --no-progress
-
+  post-deploy:
+    steps:
+      - messageout:
+          type: script
+          script:
+            - "echo 'The deploy has been completed.'"
 #    - build:
 #    script:
 #        - php -v
